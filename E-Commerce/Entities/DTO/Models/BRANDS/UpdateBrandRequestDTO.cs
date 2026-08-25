@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace E_Commerce.Entities.DTO
+namespace E_Commerce.Entities.DTO.Models.BRANDS
 {
- public class CreateBrandRequest
+    public class UpdateBrandRequestDTO
     {
         [Required(ErrorMessage = "Brand name is required")]
-        [MaxLength(100, ErrorMessage = "Brand name cannot exceed 100 characters")]
+        [MaxLength(100)]
         public string Name { get; set; }
 
         [MaxLength(500)]

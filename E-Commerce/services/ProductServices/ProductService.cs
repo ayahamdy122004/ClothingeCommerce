@@ -15,7 +15,7 @@ namespace E_Commerce.services.ProductServices
         }
      
 
-        public async Task<ProductResponse> AddProduct(CreateProductRequest request)
+        public async Task<ProductResponseDTO> AddProduct(CreateProductRequestDTO request)
         {
             // 1. Business Validation
             if (await repo.IsSlugExistAsync(request.Slug))
@@ -47,7 +47,7 @@ namespace E_Commerce.services.ProductServices
             var savedProduct = await repo.GetByIdAsync(product.Id);
 
             // 5. الـ Mapping
-            return new ProductResponse
+            return new ProductResponseDTO
             {
                 Id = savedProduct.Id,
                 Name = savedProduct.Name,
@@ -66,11 +66,11 @@ namespace E_Commerce.services.ProductServices
         }
 
   
-        public async Task<IEnumerable<ProductResponse>> GetAll()
+        public async Task<IEnumerable<ProductResponseDTO>> GetAll()
         {
             var products = await repo.GetAllAsync(); // محتاجة تكون في الـ Repo فيها Include
 
-            return products.Select(c => new ProductResponse
+            return products.Select(c => new ProductResponseDTO
             {
                 Id = c.Id,
                 Name = c.Name,
@@ -88,7 +88,7 @@ namespace E_Commerce.services.ProductServices
             }).ToList();
         }
      
-        public async Task<ProductResponse> UpdateProduct(int id, UpdateProductRequest pro)
+        public async Task<ProductResponseDTO> UpdateProduct(int id, UPdateProductRequestDTO pro)
         {
             var product = await repo.GetByIdAsync(id);
             if (product == null)
@@ -119,7 +119,7 @@ namespace E_Commerce.services.ProductServices
             // جلب المنتج تاني عشان نرجع الـ Response بتاعه بالأسماء الجديدة
             var updatedProduct = await repo.GetByIdAsync(id);
 
-            return new ProductResponse
+            return new ProductResponseDTO
             {
                 Id = updatedProduct.Id,
                 Name = updatedProduct.Name,

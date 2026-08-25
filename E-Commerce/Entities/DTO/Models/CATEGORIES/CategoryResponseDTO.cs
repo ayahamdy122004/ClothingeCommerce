@@ -1,12 +1,11 @@
-﻿namespace E_Commerce.Entities.DTO.Models.BRANDS
+﻿namespace E_Commerce.Entities.DTO.Models.CATEGORIES
 {
-
-    public class BrandResponse
+    public class CategoryResponseDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        public string? LogoUrl { get; set; }
+        public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
     }
 }

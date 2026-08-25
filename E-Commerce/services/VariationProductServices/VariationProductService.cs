@@ -13,7 +13,7 @@ namespace E_Commerce.services.VariationProductServices
         {
             this.variationRepository = variationRepository;
         }
-        public async Task<VariationProductResponse> Create(int productId,CreateVariationProduct variationProduct)
+        public async Task<VariationProductResponseDTO> Create(int productId,CreateVariationProductDTO variationProduct)
         {
             var isSkuExist = await variationRepository
                 .IsSkuExistAsync(variationProduct.SKU);
@@ -36,7 +36,7 @@ namespace E_Commerce.services.VariationProductServices
 
             var result = await variationRepository.Add(variation);
 
-            return new VariationProductResponse
+            return new VariationProductResponseDTO
             {
                 Id = result.Id,
                 ProductId = result.ProductId,
@@ -52,9 +52,9 @@ namespace E_Commerce.services.VariationProductServices
         // =============================
         // Update Variation
         // =============================
-        public async Task<VariationProductResponse> Update(
+        public async Task<VariationProductResponseDTO> Update(
             int id,
-            UpdateVariationProduct variationProduct)
+            UpdateVariationProductDTO variationProduct)
         {
             var variation = await variationRepository.GetById(id);
 
@@ -80,7 +80,7 @@ namespace E_Commerce.services.VariationProductServices
 
             var result = await variationRepository.Update(variation);
 
-            return new VariationProductResponse
+            return new VariationProductResponseDTO
             {
                 Id = result.Id,
                 ProductId = result.ProductId,
@@ -97,11 +97,11 @@ namespace E_Commerce.services.VariationProductServices
         // =============================
         // Get All
         // =============================
-        public async Task<IEnumerable<VariationProductResponse>> GetAll()
+        public async Task<IEnumerable<VariationProductResponseDTO>> GetAll()
         {
             var variations = await variationRepository.GetAll();
 
-            return variations.Select(v => new VariationProductResponse
+            return variations.Select(v => new VariationProductResponseDTO
             {
                 Id = v.Id,
                 ProductId = v.ProductId,
@@ -118,7 +118,7 @@ namespace E_Commerce.services.VariationProductServices
         // =============================
         // Get By Id
         // =============================
-        public async Task<VariationProductResponse> GetById(int id)
+        public async Task<VariationProductResponseDTO> GetById(int id)
         {
             var variation = await variationRepository.GetById(id);
 
@@ -127,7 +127,7 @@ namespace E_Commerce.services.VariationProductServices
                 throw new Exception("Variation not found");
             }
 
-            return new VariationProductResponse
+            return new VariationProductResponseDTO
             {
                 Id = variation.Id,
                 ProductId = variation.ProductId,

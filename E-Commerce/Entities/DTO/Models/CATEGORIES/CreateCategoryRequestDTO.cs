@@ -2,7 +2,7 @@
 
 namespace E_Commerce.Entities.DTO.Models.CATEGORIES
 {
-    public class CreateCategoryRequest
+    public class CreateCategoryRequestDTO
     {
         [Required(ErrorMessage = "Category name is required")]
         [MaxLength(100)]

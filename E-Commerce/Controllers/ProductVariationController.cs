@@ -17,11 +17,11 @@ namespace E_Commerce.Controllers
             this.variationProductService = variationProductService;
         }
 
-       // [Authorize(Roles = "Administrator")]
+       // [Authorize(Role.Administrator)]
         [HttpPost("Create{productId}")]
         public async Task<IActionResult> Create(
             int productId,
-            CreateVariationProduct variationProduct)
+            CreateVariationProductDTO variationProduct)
         {
             try
             {
@@ -36,11 +36,11 @@ namespace E_Commerce.Controllers
             }
         }
 
-      //  [Authorize(Roles = "Administrator")]
+      //  [Authorize(Role.Administrator)]
         [HttpPut("Update({id})")]
         public async Task<IActionResult> Update(
             int id,
-            UpdateVariationProduct variationProduct)
+            UpdateVariationProductDTO variationProduct)
         {
             try
             {

@@ -1,6 +1,6 @@
 ﻿namespace E_Commerce.Entities.DTO.Models.Variation
 {
-    public class VariationProductResponse
+    public class VariationProductResponseDTO
     {
         public int Id { get; set; }
 

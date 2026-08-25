@@ -1,6 +1,7 @@
 ﻿using E_Commerce.Entities;
 using E_Commerce.Entities.DTO;
 using E_Commerce.Entities.DTO.Models.CATEGORIES;
+using E_Commerce.Helpers;
 using E_Commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,17 +28,17 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPost("AddCategory")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Role.Administrator)]
 
-        public async Task<IActionResult> Create([FromBody] CreateCategoryRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateCategoryRequestDTO request)
         {
             var category = await _categoryService.CreateAsync(request);
             return Ok(category);
         }
 
         [HttpPut("Update{id}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryRequest request)
+        [Authorize(Role.Administrator)]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryRequestDTO request)
         {
             var category = await _categoryService.UpdateAsync(id, request);
             if (category == null)
@@ -47,7 +48,7 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Role.Administrator)]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
             var result = await _categoryService.UpdateStatusAsync(id, request.IsActive);

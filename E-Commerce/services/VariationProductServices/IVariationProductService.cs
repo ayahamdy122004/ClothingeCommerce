@@ -4,17 +4,17 @@ namespace E_Commerce.services.VariationProductServices
 {
     public interface IVariationProductService
     {
-        Task<VariationProductResponse> Create(
+        Task<VariationProductResponseDTO> Create(
             int productId,
-            CreateVariationProduct variationProduct);
+            CreateVariationProductDTO variationProduct);
 
-        Task<VariationProductResponse> Update(
+        Task<VariationProductResponseDTO> Update(
             int id,
-            UpdateVariationProduct variationProduct);
+            UpdateVariationProductDTO variationProduct);
 
-        Task<IEnumerable<VariationProductResponse>> GetAll();
+        Task<IEnumerable<VariationProductResponseDTO>> GetAll();
 
-        Task<VariationProductResponse> GetById(int id);
+        Task<VariationProductResponseDTO> GetById(int id);
 
         Task<bool> IsSkuExistAsync(
             string sku,

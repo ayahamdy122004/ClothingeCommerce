@@ -1,4 +1,7 @@
-﻿ِnamespace E_Commerce.Entities.DTO.Models.BRANDS
+
+namespace E_Commerce.Entities.DTO.Models.BRANDS
+ِnamespace E_Commerce.Entities.DTO.Models.BRANDS
+
 {
 
     public class BrandResponseDTO
