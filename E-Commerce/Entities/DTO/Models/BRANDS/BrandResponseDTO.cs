@@ -1,7 +1,7 @@
 ﻿namespace E_Commerce.Entities.DTO.Models.BRANDS
 {
 
-    public class BrandResponse
+    public class BrandResponseDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }

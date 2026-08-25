@@ -3,7 +3,7 @@ using E_Commerce.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-//طبعا ي استاذ منتور انا عامله كومنت علي  [Authorize(Roles = "Administrator")] عشان اعرف اضيف و اعرفه انك عايزاه من غير كومنت 
+//طبعا ي استاذ منتور انا عامله كومنت علي  [Authorize(Role.Administrator)] عشان اعرف اضيف و اعرفه انك عايزاه من غير كومنت 
 namespace E_Commerce.Controllers
 {
     [Route("api/[controller]")]
@@ -24,8 +24,8 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPut("Update-Product")]
-       // [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Update(int id, [FromForm] UpdateProductRequest up)
+       // [Authorize(Role.Administrator)]
+        public async Task<IActionResult> Update(int id, [FromForm] UPdateProductRequestDTO up)
         {
             var pro = await service.UpdateProduct(id, up);
             if (pro != null)
@@ -37,7 +37,7 @@ namespace E_Commerce.Controllers
         }
         //[Authorize(Roles = "Administrator")]
         [HttpPost("Add-Product")]
-        public async Task<IActionResult> Add([FromForm] CreateProductRequest pro)
+        public async Task<IActionResult> Add([FromForm] CreateProductRequestDTO pro)
         {
             var p=await service.AddProduct(pro);    
             if (p != null) 

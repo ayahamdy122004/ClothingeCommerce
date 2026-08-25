@@ -1,6 +1,7 @@
 ﻿using E_Commerce.Entities;
 using E_Commerce.Entities.DTO; // <-- ده السطر اللي بيحل إيرور الـ UpdateStatusRequest
 using E_Commerce.Entities.DTO.Models.BRANDS;
+using E_Commerce.Helpers;
 using E_Commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,16 +29,17 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] CreateBrandRequest request)
+        [Authorize(Role.Administrator)]
+        public async Task<IActionResult> Create([FromBody] CreateBrandRequestDTO request)
         {
             var brand = await _brandService.CreateAsync(request);
             return Ok(brand);
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateBrandRequest request)
+      
+        [Authorize(Role.Administrator)]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBrandRequestDTO request)
         {
             var brand = await _brandService.UpdateAsync(id, request);
             if (brand == null)
@@ -47,7 +49,7 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Role.Administrator)]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
             var result = await _brandService.UpdateStatusAsync(id, request.IsActive);

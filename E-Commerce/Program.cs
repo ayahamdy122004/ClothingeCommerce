@@ -27,16 +27,13 @@ namespace E_Commerce
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Add services to the container.
             builder.Services.AddControllers();
 
-            // 2. Swagger Configuration (مع إعداد الـ JWT في السوابجر)
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Clothing E-Commerce API", Version = "v1" });
 
-                // ده بيحط زر "Authorize" في السوابجر عشان تدخلي التوكن
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,

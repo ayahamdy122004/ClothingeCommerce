@@ -16,11 +16,11 @@ namespace E_Commerce.Services
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<IEnumerable<CategoryResponse>> GetAllAsync()
+        public async Task<IEnumerable<CategoryResponseDTO>> GetAllAsync()
         {
             var categories = await _categoryRepository.GetAllAsync();
 
-            return categories.Select(c => new CategoryResponse
+            return categories.Select(c => new CategoryResponseDTO
             {
                 Id = c.Id,
                 Name = c.Name,
@@ -30,7 +30,7 @@ namespace E_Commerce.Services
             });
         }
 
-        public async Task<CategoryResponse?> CreateAsync(CreateCategoryRequest request)
+        public async Task<CategoryResponseDTO?> CreateAsync(CreateCategoryRequestDTO request)
         {
             if (await _categoryRepository.IsNameExistAsync(request.Name))
                 throw new Exception("Category name already exists.");
@@ -46,7 +46,7 @@ namespace E_Commerce.Services
             _categoryRepository.Add(category);
             await _categoryRepository.SaveChangesAsync();
 
-            return new CategoryResponse
+            return new CategoryResponseDTO
             {
                 Id = category.Id,
                 Name = category.Name,
@@ -56,7 +56,7 @@ namespace E_Commerce.Services
             };
         }
 
-        public async Task<CategoryResponse?> UpdateAsync(int id, UpdateCategoryRequest request)
+        public async Task<CategoryResponseDTO?> UpdateAsync(int id, UpdateCategoryRequestDTO request)
         {
             var category = await _categoryRepository.GetByIdAsync(id);
             if (category == null) return null;
@@ -71,7 +71,7 @@ namespace E_Commerce.Services
             _categoryRepository.Update(category);
             await _categoryRepository.SaveChangesAsync();
 
-            return new CategoryResponse
+            return new CategoryResponseDTO
             {
                 Id = category.Id,
                 Name = category.Name,

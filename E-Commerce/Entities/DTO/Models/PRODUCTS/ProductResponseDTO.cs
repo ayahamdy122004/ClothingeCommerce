@@ -1,6 +1,6 @@
 ﻿namespace E_Commerce.Entities.DTO.Models.PRODUCTS
 {
-    public class ProductResponse
+    public class ProductResponseDTO
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
 ﻿namespace E_Commerce.Entities.DTO.Models.CATEGORIES
 {
-    public class CategoryResponse
+    public class CategoryResponseDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }

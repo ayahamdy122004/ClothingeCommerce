@@ -17,11 +17,11 @@ namespace E_Commerce.Services
         }
 
         
-        public async Task<IEnumerable<BrandResponse>> GetAllAsync()
+        public async Task<IEnumerable<BrandResponseDTO>> GetAllAsync()
         {
             var brands = await repo.GetAllAsync();
 
-            return brands.Select(b => new BrandResponse
+            return brands.Select(b => new BrandResponseDTO
             {
                 Id = b.Id,
                 Name = b.Name,
@@ -31,7 +31,7 @@ namespace E_Commerce.Services
             });
         }
 
-        public async Task<BrandResponse?> CreateAsync(CreateBrandRequest request)
+        public async Task<BrandResponseDTO?> CreateAsync(CreateBrandRequestDTO request)
         {
             if (await repo.IsNameExistAsync(request.Name))
                 throw new Exception("Brand name already exists."); 
@@ -44,7 +44,7 @@ namespace E_Commerce.Services
             };
             repo.Add(brand);
             await repo.SaveChangesAsync();
-            return new BrandResponse
+            return new BrandResponseDTO
             {
                 Id = brand.Id,
                 Name = brand.Name,
@@ -53,7 +53,7 @@ namespace E_Commerce.Services
                 IsActive = brand.IsActive
             };
         }
-        public async Task<BrandResponse?> UpdateAsync(int id, UpdateBrandRequest request)
+        public async Task<BrandResponseDTO?> UpdateAsync(int id, UpdateBrandRequestDTO request)
         {
             var brand = await repo.GetByIdAsync(id);
             if (brand == null) return null;
@@ -66,7 +66,7 @@ namespace E_Commerce.Services
             repo.Update(brand);
             await repo.SaveChangesAsync();
 
-            return new BrandResponse
+            return new BrandResponseDTO
             {
                 Id = brand.Id,
                 Name = brand.Name,

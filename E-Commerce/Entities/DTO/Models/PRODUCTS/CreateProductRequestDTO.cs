@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace E_Commerce.Entities.DTO.Models.PRODUCTS
 {
-    public class UpdateProductRequest
+    public class CreateProductRequestDTO 
     {
         [Required]
         [MaxLength(200)]
@@ -17,21 +18,23 @@ namespace E_Commerce.Entities.DTO.Models.PRODUCTS
 
         public string? FullDescription { get; set; }
 
+        // لازمة أرقام عشان الـ Foreign Key
         public int BrandId { get; set; }
         public int CategoryId { get; set; }
 
         public decimal BasePrice { get; set; }
 
-        public decimal? DiscountPrice { get; set; }
-
         [MaxLength(500)]
         public string? CoverImageUrl { get; set; }
 
+        [MaxLength(100)]
+        public string? Material { get; set; }
+
+        [MaxLength(50)]
         public string? Gender { get; set; }
 
         public string? CareInstructions { get; set; }
-
-        public bool IsActive { get; set; }
-        public bool IsFeatured { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsFeatured { get; set; } = false;
     }
 }

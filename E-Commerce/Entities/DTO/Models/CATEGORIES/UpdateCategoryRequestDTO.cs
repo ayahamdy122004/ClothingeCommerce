@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace E_Commerce.Entities.DTO.Models.BRANDS
+namespace E_Commerce.Entities.DTO.Models.CATEGORIES
 {
-    public class UpdateBrandRequest
+    public class UpdateCategoryRequestDTO
     {
-        [Required(ErrorMessage = "Brand name is required")]
+        [Required(ErrorMessage = "Category name is required")]
         [MaxLength(100)]
         public string Name { get; set; }
 
@@ -12,6 +12,6 @@ namespace E_Commerce.Entities.DTO.Models.BRANDS
         public string? Description { get; set; }
 
         [MaxLength(500)]
-        public string? LogoUrl { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

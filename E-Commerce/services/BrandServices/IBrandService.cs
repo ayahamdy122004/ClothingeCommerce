@@ -5,9 +5,9 @@ namespace E_Commerce.Services.Interfaces
 {
     public interface IBrandService
     {
-        Task<IEnumerable<BrandResponse>> GetAllAsync();
-        Task<BrandResponse?> CreateAsync(CreateBrandRequest request);
-        Task<BrandResponse?> UpdateAsync(int id, UpdateBrandRequest request);
+        Task<IEnumerable<BrandResponseDTO>> GetAllAsync();
+        Task<BrandResponseDTO?> CreateAsync(CreateBrandRequestDTO request);
+        Task<BrandResponseDTO?> UpdateAsync(int id, UpdateBrandRequestDTO request);
         Task<bool> UpdateStatusAsync(int id, bool isActive);
     }
 }

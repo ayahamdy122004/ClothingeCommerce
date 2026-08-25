@@ -2,7 +2,7 @@
 
 namespace E_Commerce.Entities.DTO.Models.Variation
 {
-    public class UpdateVariationProduct
+    public class UpdateVariationProductDTO
     {
         [Required(ErrorMessage = "Color is required")]
         public string Color { get; set; }
