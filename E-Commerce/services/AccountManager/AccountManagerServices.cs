@@ -1,5 +1,6 @@
 ﻿using ClothingStore.Entities;
 using E_Commerce.Entities.DTO;
+using E_Commerce.Entities.DTO.Account;
 using E_Commerce.Entities.Model.authonution;
 using E_Commerce.Helpers;
 using Microsoft.AspNetCore.Identity;

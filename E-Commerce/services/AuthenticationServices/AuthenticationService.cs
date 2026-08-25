@@ -1,5 +1,6 @@
 ﻿using ClothingStore.Entities;
 using E_Commerce.Entities.DTO; // تأكدي إن الـ Models هنا
+using E_Commerce.Entities.DTO.Idetity;
 using E_Commerce.Entities.Model.authonution;
 using E_Commerce.Helpers;
 using Microsoft.AspNetCore.Authentication;
