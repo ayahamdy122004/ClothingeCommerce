@@ -1,5 +1,6 @@
 using ClothingStore.Entities;
 using E_Commerce.Entities.Data;
+using E_Commerce.Entities.Model;
 using E_Commerce.Helpers;
 using E_Commerce.Repositories;
 using E_Commerce.Repositories.Interfaces;
@@ -11,7 +12,9 @@ using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
 using E_Commerce.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
