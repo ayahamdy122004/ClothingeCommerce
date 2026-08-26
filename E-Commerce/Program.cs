@@ -114,7 +114,7 @@ namespace E_Commerce
             builder.Services.AddScoped<IVariationRepository, VariationRepository>();
 
             // 7. Services (Business Logic Layer)
-            builder.Services.AddScoped<IAuthenticationservice, AuthenticationService>();
+            builder.Services.AddScoped<IAuthenticationservice, services.AuthenticationServices.AuthenticationService>();
             builder.Services.AddScoped<IAccountManagerServices, AccountManagerServices>();
             builder.Services.AddScoped<IBrandService, BrandService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
