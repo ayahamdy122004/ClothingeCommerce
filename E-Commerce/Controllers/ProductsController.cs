@@ -1,4 +1,5 @@
 ﻿using E_Commerce.Entities.DTO.Models.PRODUCTS;
+using E_Commerce.Helpers;
 using E_Commerce.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +25,7 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPut("Update-Product")]
-       // [Authorize(Role.Administrator)]
+        [Authorize(Role.Administrator)]
         public async Task<IActionResult> Update(int id, [FromForm] UPdateProductRequestDTO up)
         {
             var pro = await service.UpdateProduct(id, up);
@@ -35,7 +36,7 @@ namespace E_Commerce.Controllers
             }
             return NotFound("Product is not found");
         }
-        //[Authorize(Roles = "Administrator")]
+        [Authorize(Role.Administrator)]
         [HttpPost("Add-Product")]
         public async Task<IActionResult> Add([FromForm] CreateProductRequestDTO pro)
         {
@@ -45,7 +46,7 @@ namespace E_Commerce.Controllers
             return BadRequest("this item id null");
         }
         [HttpPatch("Update-Status/{id}")]
-        //[Authorize(Roles = "Administrator")]
+        [Authorize(Role.Administrator)]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] bool isActive)
         {
             var result = await service.UpdateStatusAsync(id, isActive);
@@ -57,6 +58,21 @@ namespace E_Commerce.Controllers
             {
                 return NotFound(new { message = "Product not found." });
             }
-        }   
+        }
+        [HttpGet("GetProductListForCustomer")]
+        public async Task<IActionResult> GetProductListForCustomer()
+        {
+            var products = await service.GetProductListForCustomerAsync();
+            return Ok(products);
+        }
+        [HttpGet("GetProductDetailsForCustomer/{id}")]
+        public async Task<IActionResult> GetProductDetailsForCustomer(int id)
+        {
+            var product = await service.GetProductDetailsByIdAsync(id);
+            if (product == null)
+                return NotFound(new { message = "Product not found or inactive." });
+
+            return Ok(product);
+        }
     }
 }

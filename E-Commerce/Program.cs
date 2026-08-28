@@ -1,12 +1,11 @@
 ﻿using ClothingStore.Entities;
 using E_Commerce.Entities;
 using E_Commerce.Entities.Data;
-
 using E_Commerce.Entities.Model;
-
 using E_Commerce.Helpers;
 using E_Commerce.Repositories;
 using E_Commerce.Repositories.Interfaces;
+using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
 using E_Commerce.Repositorys.VariationRepo;
 using E_Commerce.services.AccountManager;
@@ -15,10 +14,9 @@ using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
 using E_Commerce.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -112,6 +110,7 @@ namespace E_Commerce
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IVariationRepository, VariationRepository>();
+            builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 
             // 7. Services (Business Logic Layer)
             builder.Services.AddScoped<IAuthenticationservice, services.AuthenticationServices.AuthenticationService>();
@@ -120,7 +119,12 @@ namespace E_Commerce
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IVariationProductService, VariationProductService>();
+            builder.Services.AddScoped<IProductImageService, ProductImageService>();
 
+
+            //automapper
+            // بيخلي السيستم يدور على أي Profile في المشروع ويسجله أوتوماتيك
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             // 8. Build Application
             var app = builder.Build();
