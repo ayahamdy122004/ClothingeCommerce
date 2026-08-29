@@ -83,5 +83,14 @@ namespace E_Commerce.Controllers
 
             return Ok(result);
         }
+        [HttpGet("GetProductBySlug")]
+        //product by slug
+        public async Task<IActionResult> GetProductBySlug(string slug)
+        {
+            var product = await service.GetProductBySlug(slug);
+            if (product == null)
+                return NotFound(new { message = "Product not found." });
+            return Ok(product);
+        }
     }
 }

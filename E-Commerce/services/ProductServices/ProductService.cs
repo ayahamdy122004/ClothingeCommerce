@@ -15,9 +15,10 @@ namespace E_Commerce.services.ProductServices
         private readonly IProductRepository repo;
         private readonly IMapper mapper;
         private readonly AppDbContext context;
-        public ProductService(IProductRepository repo, IMapper mapper)
+        public ProductService(IProductRepository repo, IMapper mapper, AppDbContext context)
         {
             this.repo = repo;
+            this.context = context;
             this.mapper = mapper;
         }
 
@@ -312,6 +313,16 @@ namespace E_Commerce.services.ProductServices
                 query.PageSize,
                 totalRecords,
                 result);
+        }
+
+        //product details by slug   
+        public async Task<ProductResponseDTO> GetProductBySlug(string slug)
+        {
+          var product = await context.Products.FirstOrDefaultAsync(p => p.Slug == slug);
+            if (product == null)
+                    throw new Exception("Product not found.");
+    
+                return mapper.Map<ProductResponseDTO>(product);
         }
     }
 }
