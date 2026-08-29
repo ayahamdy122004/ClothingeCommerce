@@ -12,6 +12,8 @@ namespace E_Commerce.services.ProductServices
         Task<ProductResponseDTO> AddProduct(CreateProductRequestDTO pro);
         Task<ProductDetailsResponseDTO?> GetProductDetailsByIdAsync(int id);
         Task<bool> UpdateStatusAsync(int id, bool isActive);
+        // product  by slug 
+        Task<ProductResponseDTO> GetProductBySlug(string slug); 
         // Module 7
         Task<PaginatedResponseDTO<ProductResponseDTO>> GetProducts(
             ProductQueryDTO query);
