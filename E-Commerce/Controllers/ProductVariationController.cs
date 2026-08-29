@@ -1,4 +1,5 @@
 ﻿using E_Commerce.Entities.DTO.Models.Variation;
+using E_Commerce.Helpers;
 using E_Commerce.services.VariationProductServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace E_Commerce.Controllers
             this.variationProductService = variationProductService;
         }
 
-       // [Authorize(Role.Administrator)]
+        [Authorize(Role.Administrator)]
         [HttpPost("Create{productId}")]
         public async Task<IActionResult> Create(
             int productId,
@@ -36,7 +37,7 @@ namespace E_Commerce.Controllers
             }
         }
 
-      //  [Authorize(Role.Administrator)]
+        [Authorize(Role.Administrator)]
         [HttpPut("Update({id})")]
         public async Task<IActionResult> Update(
             int id,
