@@ -1,4 +1,6 @@
-﻿using E_Commerce.Entities.DTO.Models.PRODUCTS;
+﻿using E_Commerce.Entities.DTO.Models.Common;
+using E_Commerce.Entities.DTO.Models.PRODUCTS;
+using E_Commerce.Entities.DTO.Models.PRODUCTS.ProductFilterAndSearch;
 
 namespace E_Commerce.services.ProductServices
 {
@@ -10,6 +12,10 @@ namespace E_Commerce.services.ProductServices
         Task<ProductResponseDTO> AddProduct(CreateProductRequestDTO pro);
         Task<ProductDetailsResponseDTO?> GetProductDetailsByIdAsync(int id);
         Task<bool> UpdateStatusAsync(int id, bool isActive);
-        
+        // Module 7
+        Task<PaginatedResponseDTO<ProductResponseDTO>> GetProducts(
+            ProductQueryDTO query);
+
+
     }
 }

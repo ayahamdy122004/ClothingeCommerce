@@ -1,4 +1,5 @@
 ﻿using E_Commerce.Entities.DTO.Models.PRODUCTS;
+using E_Commerce.Entities.DTO.Models.PRODUCTS.ProductFilterAndSearch;
 using E_Commerce.Helpers;
 using E_Commerce.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
@@ -73,6 +74,14 @@ namespace E_Commerce.Controllers
                 return NotFound(new { message = "Product not found or inactive." });
 
             return Ok(product);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetProducts(
+    [FromQuery] ProductQueryDTO query)
+        {
+            var result = await service.GetProducts(query);
+
+            return Ok(result);
         }
     }
 }
