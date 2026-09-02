@@ -19,7 +19,6 @@ namespace E_Commerce.Controllers
         {
             _categoryService = categoryService;
         }
-
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -29,13 +28,11 @@ namespace E_Commerce.Controllers
 
         [HttpPost("AddCategory")]
         [Authorize(Role.Administrator)]
-
         public async Task<IActionResult> Create([FromBody] CreateCategoryRequestDTO request)
         {
             var category = await _categoryService.CreateAsync(request);
             return Ok(category);
         }
-
         [HttpPut("Update{id}")]
         [Authorize(Role.Administrator)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryRequestDTO request)
@@ -56,6 +53,12 @@ namespace E_Commerce.Controllers
                 return NotFound(new { message = "Category not found." });
 
             return Ok(new { message = "Category status updated successfully." });
+        }
+        [HttpGet("active")] 
+        public async Task<IActionResult> GetAllActiveCategories()
+        {
+            var categories = await _categoryService.AllCategoryIsActive(true);
+            return Ok(categories);
         }
     }
 }

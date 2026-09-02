@@ -5,11 +5,15 @@ using E_Commerce.Entities.Model;
 using E_Commerce.Helpers;
 using E_Commerce.Repositories;
 using E_Commerce.Repositories.Interfaces;
+using E_Commerce.Repositorys.CustomerRepo;
 using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
 using E_Commerce.Repositorys.VariationRepo;
 using E_Commerce.services.AccountManager;
 using E_Commerce.services.AuthenticationServices;
+using E_Commerce.services.CachServices;
+using E_Commerce.services.CartServices;
+using E_Commerce.services.CustomerServices;
 using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
@@ -34,6 +38,9 @@ namespace E_Commerce
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
+            ///caching
+            builder.Services.AddMemoryCache();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Clothing E-Commerce API", Version = "v1" });
@@ -111,6 +118,8 @@ namespace E_Commerce
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IVariationRepository, VariationRepository>();
             builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
 
             // 7. Services (Business Logic Layer)
             builder.Services.AddScoped<IAuthenticationservice, services.AuthenticationServices.AuthenticationService>();
@@ -119,12 +128,15 @@ namespace E_Commerce
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IVariationProductService, VariationProductService>();
-            builder.Services.AddScoped<IProductImageService, ProductImageService>();
+            builder.Services.AddScoped<IProductImageService, ProductImageService>(); 
+            builder.Services.AddScoped<ICustomerService, CustomerService>();
+            builder.Services.AddScoped<ICachService, CachService>();
+            builder.Services.AddScoped<ICartService, CartService>();
 
 
             //automapper
-            // بيخلي السيستم يدور على أي Profile في المشروع ويسجله أوتوماتيك
-            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            // تسجيل AutoMapper باستخدام Assembly الخاص بالـ Profiles بتاعتك
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
             // 8. Build Application
             var app = builder.Build();

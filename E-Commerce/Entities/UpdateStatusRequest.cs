@@ -1,11 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-
-namespace E_Commerce.Entities
+﻿namespace E_Commerce.Entities
 {
     public class UpdateStatusRequest
     {
-        [Required]
+       // [required]
         public bool IsActive { get; set; }
     }
 }

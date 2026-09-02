@@ -92,5 +92,16 @@ namespace E_Commerce.Services
 
             return true;
         }
+
+        public async Task<IEnumerable<Category>> AllCategoryIsActive(bool isActive = true)
+        {
+            var categories = await _categoryRepository.GetAllAsync();
+            var activeCategories = categories.Where(c => c.IsActive == isActive).ToList();
+            return activeCategories;
+        }
+        //Task<IEnumerable<Category>> AllCategoryIsActive(bool IsActive)
+        //{
+
+        //}
     }
 }

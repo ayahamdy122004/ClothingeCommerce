@@ -27,8 +27,6 @@ namespace E_Commerce.Repositories
 
         public async Task<bool> IsNameExistAsync(string name, int? excludeId = null)
         {
-            // لو في excludeId يبقى ده للـ  [Authorize(Role.Administrator)]يعني لو الاسم موجود بس لمنتج تاني اقبله)
-            // لو مش في excludeId يبقى ده للـ Create (أي تكرار مرفوض)
             return await _context.Categories.
                 AnyAsync(b => b.Name == name && (!excludeId.HasValue || b.Id != excludeId.Value));
         }
@@ -48,5 +46,11 @@ namespace E_Commerce.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        Task<IEnumerable<Category>> ICategoryRepository.GetAllAsync()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }
