@@ -1,4 +1,5 @@
-﻿using E_Commerce.Entities;
+﻿using AutoMapper;
+using E_Commerce.Entities;
 using E_Commerce.Entities.DTO;
 using E_Commerce.Entities.DTO.Models.BRANDS;
 using E_Commerce.Entities.Model;
@@ -10,6 +11,7 @@ namespace E_Commerce.Services
     public class BrandService : IBrandService
     {
         private readonly IBrandRepository repo;
+        private readonly IMapper mapper;
 
         public BrandService(IBrandRepository repo)
         {
@@ -85,6 +87,13 @@ namespace E_Commerce.Services
             await repo.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<IEnumerable<BrandResponseDTO>> GetAllActiveBrandsAsync()
+        {
+            var brands = await repo.GetAllAsync();
+            var activeBrands = brands.Where(b => b.IsActive);
+       return  mapper.Map<IEnumerable<BrandResponseDTO>>(activeBrands);
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using E_Commerce.Entities.DTO;
+using E_Commerce.Entities.DTO.CUSTOMER;
 using E_Commerce.services.AccountManager;
 using E_Commerce.services.AuthenticationServices;
+using E_Commerce.services.CustomerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -10,45 +12,43 @@ namespace E_Commerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // محدش يدخل من غير Token
+ 
     public class AccountController : ControllerBase
     {
         private readonly IAccountManagerServices  account;
+        private readonly ICustomerService service;
 
-        public AccountController(IAccountManagerServices account)
+        public AccountController(IAccountManagerServices account, ICustomerService service)
         {
            this.account = account;
+        this.service = service;
         }
+        [HttpGet("diplayCustomer({Email})")]
+        public async Task<IActionResult> GetCustomer(string Email)
+        { 
+            var customer = await service.GetCustomer(Email);
+            if (customer == null)
+                return NotFound(new { message = "Customer not found." });
+            return Ok(customer);
 
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
-        {
-            // ⚠️ هنا بنجيب الـ ID من الـ Token اللي أرسله العميل (أمان وليس من الـ Body)
-            var userId = User.FindFirstValue("uid"); // نفس الـ Claim اللي حطيناه لما عملنا الـ JWT
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { message = "Invalid token." });
-
-            var profile = await account.GetProfileAsync(userId);
-            if (profile == null)
-                return NotFound(new { message = "User not found." });
-
-            return Ok(profile);
         }
-
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfile model)
+ 
+        [HttpPut("UpdateProfile")] 
+        public async Task<IActionResult> UpdateCustomer([FromQuery] string email, [FromBody] UpdateUserProfileDTO model)
         {
-            var userId = User.FindFirstValue("uid");
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { message = "Email is required." });
+            }
 
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { message = "Invalid token." });
+            var updatedCustomer = await service.UpdateCustomer(email, model);
 
-            var result = await account.UpdateProfileAsync(userId, model);
-            if (!result.IsAuthenticated)
-                return BadRequest(result);
+            if (updatedCustomer == null)
+            {
+                return NotFound(new { message = "Customer not found or update failed." });
+            }
 
-            return Ok(result);
+            return Ok(updatedCustomer);
         }
 
         [HttpPost("forgot-password")]
