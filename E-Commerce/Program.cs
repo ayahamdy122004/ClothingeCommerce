@@ -6,6 +6,7 @@ using E_Commerce.Helpers;
 using E_Commerce.Repositories;
 using E_Commerce.Repositories.Interfaces;
 using E_Commerce.Repositorys.CustomerRepo;
+using E_Commerce.Repositorys.OrderRepo;
 using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
 using E_Commerce.Repositorys.VariationRepo;
@@ -14,6 +15,7 @@ using E_Commerce.services.AuthenticationServices;
 using E_Commerce.services.CachServices;
 using E_Commerce.services.CartServices;
 using E_Commerce.services.CustomerServices;
+using E_Commerce.services.OrderServices;
 using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
@@ -119,6 +121,7 @@ namespace E_Commerce
             builder.Services.AddScoped<IVariationRepository, VariationRepository>();
             builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
             builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 
             // 7. Services (Business Logic Layer)
@@ -132,6 +135,7 @@ namespace E_Commerce
             builder.Services.AddScoped<ICustomerService, CustomerService>();
             builder.Services.AddScoped<ICachService, CachService>();
             builder.Services.AddScoped<ICartService, CartService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
 
             //automapper
