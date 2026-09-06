@@ -314,7 +314,6 @@ namespace E_Commerce.services.ProductServices
                 totalRecords,
                 result);
         }
-
         //product details by slug   
         public async Task<ProductResponseDTO> GetProductBySlug(string slug)
         {
