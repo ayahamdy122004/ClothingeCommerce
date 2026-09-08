@@ -16,10 +16,12 @@ using E_Commerce.services.CachServices;
 using E_Commerce.services.CartServices;
 using E_Commerce.services.CustomerServices;
 using E_Commerce.services.OrderServices;
+using E_Commerce.services.PaymantServices;
 using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
 using E_Commerce.Services.Interfaces;
+using E_Commerce.Services.PaymentServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -136,6 +138,8 @@ namespace E_Commerce
             builder.Services.AddScoped<ICachService, CachService>();
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
+           
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 
             //automapper
