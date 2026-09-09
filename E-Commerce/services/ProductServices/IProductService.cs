@@ -1,23 +1,19 @@
 ﻿using E_Commerce.Entities.DTO.Models.Common;
 using E_Commerce.Entities.DTO.Models.PRODUCTS;
 using E_Commerce.Entities.DTO.Models.PRODUCTS.ProductFilterAndSearch;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 
 namespace E_Commerce.services.ProductServices
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductResponseDTO>> GetAll();
-        Task<IEnumerable<ProductListResponseDTO>> GetProductListForCustomerAsync();
-        Task<ProductResponseDTO> UpdateProduct(int id,UPdateProductRequestDTO pro);
-        Task<ProductResponseDTO> AddProduct(CreateProductRequestDTO pro);
-        Task<ProductDetailsResponseDTO?> GetProductDetailsByIdAsync(int id);
-        Task<bool> UpdateStatusAsync(int id, bool isActive);
-        // product  by slug 
-        Task<ProductResponseDTO> GetProductBySlug(string slug); 
-        // Module 7
-        Task<PaginatedResponseDTO<ProductResponseDTO>> GetProducts(
-            ProductQueryDTO query);
-
-
+        Task<ApiResponse<IEnumerable<ProductResponseDTO>>> GetAll();
+        Task<ApiResponse<IEnumerable<ProductListResponseDTO>>> GetProductListForCustomerAsync();
+        Task<ApiResponse<ProductResponseDTO>> AddProduct(CreateProductRequestDTO pro);
+        Task<ApiResponse<ProductResponseDTO>> UpdateProduct(int id, UPdateProductRequestDTO pro);
+        Task<ApiResponse<ProductDetailsResponseDTO>> GetProductDetailsByIdAsync(int id);
+        Task<ApiResponse<ProductResponseDTO>> GetProductBySlug(string slug);
+        Task<ApiResponse<bool>> UpdateStatusAsync(int id, bool isActive);
+        Task<ApiResponse<PaginatedResponseDTO<ProductResponseDTO>>> GetProducts(ProductQueryDTO query);
     }
 }

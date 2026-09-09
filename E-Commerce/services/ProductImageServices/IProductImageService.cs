@@ -1,12 +1,12 @@
 ﻿using E_Commerce.Entities.DTO.Models.ProductImages;
-using E_Commerce.Entities.Model;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 
 namespace E_Commerce.services.ProductServices
 {
     public interface IProductImageService
     {
-        Task<IEnumerable<ProductImageUploadItemDTO>> UploadImagesAsync(UploadImageRequestDTO request);
-        Task<bool> DeleteImageAsync(int imageId);
-        Task<IEnumerable<ProductImageUploadItemDTO>> GetImagesByProductIdAsync(int productId);
+        Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> UploadImagesAsync(UploadImageRequestDTO request);
+        Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> GetImagesByProductIdAsync(int productId);
+        Task<ApiResponse<bool>> DeleteImageAsync(int imageId);
     }
 }

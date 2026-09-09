@@ -4,6 +4,7 @@ using E_Commerce.Entities.Data;
 using E_Commerce.Entities.DTO.Models.Common;
 using E_Commerce.Entities.DTO.Models.PRODUCTS;
 using E_Commerce.Entities.DTO.Models.PRODUCTS.ProductFilterAndSearch;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Entities.Model;
 using E_Commerce.Repositorys.ProductRepo;
 using Microsoft.EntityFrameworkCore;
@@ -12,316 +13,263 @@ namespace E_Commerce.services.ProductServices
 {
     public class ProductService : IProductService
     {
-        private readonly IProductRepository repo;
-        private readonly IMapper mapper;
-        private readonly AppDbContext context;
+        private readonly IProductRepository _repo;
+        private readonly IMapper _mapper;
+        private readonly AppDbContext _context;
+
         public ProductService(IProductRepository repo, IMapper mapper, AppDbContext context)
         {
-            this.repo = repo;
-            this.context = context;
-            this.mapper = mapper;
+            _repo = repo;
+            _context = context;
+            _mapper = mapper;
         }
 
-        public async Task<ProductResponseDTO> AddProduct(CreateProductRequestDTO request)
+        public async Task<ApiResponse<IEnumerable<ProductResponseDTO>>> GetAll()
         {
-            // 1. Business Validation
-            if (await repo.IsSlugExistAsync(request.Slug))
-                throw new Exception("This product slug already exists.");
+            var products = await _repo.GetAllAsync();
+            var dtos = _mapper.Map<IEnumerable<ProductResponseDTO>>(products);
 
-            // 2. إنشاء الـ Entity باستخدام AutoMapper
-            var product = mapper.Map<Product>(request);
+            return new ApiResponse<IEnumerable<ProductResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Products retrieved successfully.",
+                Data = dtos
+            };
+        }
+
+        public async Task<ApiResponse<ProductResponseDTO>> AddProduct(CreateProductRequestDTO request)
+        {
+            if (await _repo.IsSlugExistAsync(request.Slug))
+            {
+                return new ApiResponse<ProductResponseDTO>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "This product slug already exists.",
+                    Errors = new { Slug = "Slug already exists." }
+                };
+            }
+
+            var product = _mapper.Map<Product>(request);
             product.IsActive = true;
             product.CreatedAt = DateTime.UtcNow;
 
-            // 3. حفظ المنتج
-            await repo.AddAsync(product);
+            await _repo.AddAsync(product);
+            var savedProduct = await _repo.GetByIdAsync(product.Id);
 
-            // 4. جلب المنتج تاني
-            var savedProduct = await repo.GetByIdAsync(product.Id);
-
-            // 5. الـ Mapping للـ Response
-            return mapper.Map<ProductResponseDTO>(savedProduct);
+            return new ApiResponse<ProductResponseDTO>
+            {
+                StatusCode = 201,
+                Success = true,
+                Message = "Product created successfully.",
+                Data = _mapper.Map<ProductResponseDTO>(savedProduct)
+            };
         }
 
-        public async Task<IEnumerable<ProductResponseDTO>> GetAll()
+        public async Task<ApiResponse<ProductResponseDTO>> UpdateProduct(int id, UPdateProductRequestDTO request)
         {
-            var products = await repo.GetAllAsync();
-            return mapper.Map<IEnumerable<ProductResponseDTO>>(products);
-        }
-
-        public async Task<ProductResponseDTO> UpdateProduct(int id, UPdateProductRequestDTO pro)
-        {
-            var product = await repo.GetByIdAsync(id);
+            var product = await _repo.GetByIdAsync(id);
             if (product == null)
-                throw new Exception("Product does not exist.");
+            {
+                return new ApiResponse<ProductResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Product does not exist."
+                };
+            }
 
-            // تحديث بيانات الكائن الموجود مباشرة باستخدام AutoMapper
-            mapper.Map(pro, product);
+            _mapper.Map(request, product);
             product.UpdatedAt = DateTime.UtcNow;
 
-            await repo.UpdateAsync(product);
+            await _repo.UpdateAsync(product);
+            var updatedProduct = await _repo.GetByIdAsync(id);
 
-            var updatedProduct = await repo.GetByIdAsync(id);
-            return mapper.Map<ProductResponseDTO>(updatedProduct);
+            return new ApiResponse<ProductResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Product updated successfully.",
+                Data = _mapper.Map<ProductResponseDTO>(updatedProduct)
+            };
         }
 
-        public async Task<IEnumerable<ProductListResponseDTO>> GetProductListForCustomerAsync()
+        public async Task<ApiResponse<IEnumerable<ProductListResponseDTO>>> GetProductListForCustomerAsync()
         {
-            var products = await repo.GetAllAsync();
-            return mapper.Map<IEnumerable<ProductListResponseDTO>>(products);
+            var products = await _repo.GetAllAsync();
+            var dtos = _mapper.Map<IEnumerable<ProductListResponseDTO>>(products);
+
+            return new ApiResponse<IEnumerable<ProductListResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Customer product list retrieved successfully.",
+                Data = dtos
+            };
         }
 
-        public async Task<bool> UpdateStatusAsync(int id, bool isActive)
+        public async Task<ApiResponse<bool>> UpdateStatusAsync(int id, bool isActive)
         {
-            var p = await repo.GetByIdAsync(id);
-            if (p == null) return false;
+            var product = await _repo.GetByIdAsync(id);
+            if (product == null)
+            {
+                return new ApiResponse<bool>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Product not found.",
+                    Data = false
+                };
+            }
 
-            p.IsActive = isActive;
-            p.UpdatedAt = DateTime.UtcNow;
+            product.IsActive = isActive;
+            product.UpdatedAt = DateTime.UtcNow;
 
-            await repo.UpdateAsync(p);
-            return true;
+            await _repo.UpdateAsync(product);
+
+            return new ApiResponse<bool>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Product status updated successfully.",
+                Data = true
+            };
         }
-        public async Task<ProductDetailsResponseDTO?> GetProductDetailsByIdAsync(int id)
-        {
-            // 1. جلب الكائن من الـ Repo
-            var productObj = await repo.GetByIdAsync(id);
 
+        public async Task<ApiResponse<ProductDetailsResponseDTO>> GetProductDetailsByIdAsync(int id)
+        {
+            var productObj = await _repo.GetByIdAsync(id);
             if (productObj == null)
-                return null;
+            {
+                return new ApiResponse<ProductDetailsResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Product not found."
+                };
+            }
 
-            // نحول الكائن لـ Product بـ AutoMapper بدل الكاست اليدوي
-            var product = mapper.Map<Product>(productObj);
-
+            var product = _mapper.Map<Product>(productObj);
             if (!product.IsActive)
-                return null;
+            {
+                return new ApiResponse<ProductDetailsResponseDTO>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "Product is inactive."
+                };
+            }
 
-            return mapper.Map<ProductDetailsResponseDTO>(product);
-
+            return new ApiResponse<ProductDetailsResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Product details retrieved successfully.",
+                Data = _mapper.Map<ProductDetailsResponseDTO>(product)
+            };
         }
-        /// <summary>
-        /// /////////////////////
-        /// </summary>
-        /// <param name="specParams"></param>
-        /// <returns></returns>
-        public async Task<PaginatedResponseDTO<ProductResponseDTO>> GetProducts(
-      ProductQueryDTO query)
+
+        public async Task<ApiResponse<ProductResponseDTO>> GetProductBySlug(string slug)
         {
-            var products = await repo.GetAllAsync();
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Slug == slug);
+            if (product == null)
+            {
+                return new ApiResponse<ProductResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Product not found."
+                };
+            }
 
-            // نحولها Query عشان نقدر نعمل عليها
-            // Search + Filter + Sort
-            var productQuery = products.AsQueryable();
+            return new ApiResponse<ProductResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Product retrieved successfully.",
+                Data = _mapper.Map<ProductResponseDTO>(product)
+            };
+        }
 
-
-            // =========================
-            // 1. عرض المنتجات الـ Active فقط
-            // =========================
-
-            productQuery = productQuery.Where(p => p.IsActive);
-
-
-            // =========================
-            // 2. Search by Product Name
-            // =========================
+        public async Task<ApiResponse<PaginatedResponseDTO<ProductResponseDTO>>> GetProducts(ProductQueryDTO query)
+        {
+            var products = await _repo.GetAllAsync();
+            var productQuery = products.AsQueryable().Where(p => p.IsActive);
 
             if (!string.IsNullOrWhiteSpace(query.Search))
-            {
-                productQuery = productQuery.Where(p =>
-                    p.Name.Contains(query.Search));
-            }
-
-
-            // =========================
-            // 3. Filter by Category
-            // =========================
+                productQuery = productQuery.Where(p => p.Name.Contains(query.Search));
 
             if (query.CategoryId.HasValue)
-            {
-                productQuery = productQuery.Where(p =>
-                    p.CategoryId == query.CategoryId.Value);
-            }
-
-
-            // =========================
-            // 4. Filter by Brand
-            // =========================
+                productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId.Value);
 
             if (query.BrandId.HasValue)
-            {
-                productQuery = productQuery.Where(p =>
-                    p.BrandId == query.BrandId.Value);
-            }
-
-
-            // =========================
-            // 5. Filter by Size
-            // =========================
+                productQuery = productQuery.Where(p => p.BrandId == query.BrandId.Value);
 
             if (!string.IsNullOrWhiteSpace(query.Size))
-            {
-                productQuery = productQuery.Where(p =>
-                    p.Variations.Any(v =>
-                        v.Size == query.Size &&
-                        v.IsActive));
-            }
-
-
-            // =========================
-            // 6. Filter by Color
-            // =========================
+                productQuery = productQuery.Where(p => p.Variations.Any(v => v.Size == query.Size && v.IsActive));
 
             if (!string.IsNullOrWhiteSpace(query.Color))
-            {
-                productQuery = productQuery.Where(p =>
-                    p.Variations.Any(v =>
-                        v.Color == query.Color &&
-                        v.IsActive));
-            }
-
-
-            // =========================
-            // 7. Filter by Minimum Price
-            // =========================
+                productQuery = productQuery.Where(p => p.Variations.Any(v => v.Color == query.Color && v.IsActive));
 
             if (query.MinPrice.HasValue)
-            {
-                productQuery = productQuery.Where(p =>
-                    (p.DiscountPrice ?? p.BasePrice) >= query.MinPrice.Value);
-            }
-
-
-            // =========================
-            // 8. Filter by Maximum Price
-            // =========================
+                productQuery = productQuery.Where(p => (p.DiscountPrice ?? p.BasePrice) >= query.MinPrice.Value);
 
             if (query.MaxPrice.HasValue)
-            {
-                productQuery = productQuery.Where(p =>
-                    (p.DiscountPrice ?? p.BasePrice) <= query.MaxPrice.Value);
-            }
-
-
-            // =========================
-            // 9. Filter by Available Stock
-            // =========================
+                productQuery = productQuery.Where(p => (p.DiscountPrice ?? p.BasePrice) <= query.MaxPrice.Value);
 
             if (query.InStockOnly == true)
-            {
-                productQuery = productQuery.Where(p =>
-                    p.Variations.Any(v =>
-                        v.StockQuantity > 0 &&
-                        v.IsActive));
-            }
-
-
-            // =========================
-            // 10. Filter by Featured Products
-            // =========================
+                productQuery = productQuery.Where(p => p.Variations.Any(v => v.StockQuantity > 0 && v.IsActive));
 
             if (query.IsFeatured.HasValue)
+                productQuery = productQuery.Where(p => p.IsFeatured == query.IsFeatured.Value);
+
+            productQuery = query.Sort?.ToLower() switch
             {
-                productQuery = productQuery.Where(p =>
-                    p.IsFeatured == query.IsFeatured.Value);
-            }
-
-
-            // =========================
-            // 11. Sorting
-            // =========================
-
-            switch (query.Sort?.ToLower())
-            {
-                case "newest":
-                    productQuery = productQuery
-                        .OrderByDescending(p => p.CreatedAt);
-                    break;
-
-                case "name":
-                    productQuery = productQuery
-                        .OrderBy(p => p.Name);
-                    break;
-
-                case "priceasc":
-                    productQuery = productQuery
-                        .OrderBy(p => p.DiscountPrice ?? p.BasePrice);
-                    break;
-
-                case "pricedesc":
-                    productQuery = productQuery
-                        .OrderByDescending(p => p.DiscountPrice ?? p.BasePrice);
-                    break;
-
-                default:
-                    productQuery = productQuery
-                        .OrderByDescending(p => p.CreatedAt);
-                    break;
-            }
-
-
-            // =========================
-            // 12. نحسب العدد قبل Pagination
-            // =========================
+                "newest" => productQuery.OrderByDescending(p => p.CreatedAt),
+                "name" => productQuery.OrderBy(p => p.Name),
+                "priceasc" => productQuery.OrderBy(p => p.DiscountPrice ?? p.BasePrice),
+                "pricedesc" => productQuery.OrderByDescending(p => p.DiscountPrice ?? p.BasePrice),
+                _ => productQuery.OrderByDescending(p => p.CreatedAt)
+            };
 
             var totalRecords = productQuery.Count();
-
-
-            // =========================
-            // 13. Pagination
-            // =========================
 
             var productsAfterPagination = productQuery
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .ToList();
 
+            var result = productsAfterPagination.Select(p => new ProductResponseDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Slug = p.Slug,
+                ShortDescription = p.ShortDescription,
+                BrandName = p.Brand?.Name,
+                CategoryName = p.Category?.Name,
+                BasePrice = p.BasePrice,
+                DiscountPrice = p.DiscountPrice,
+                CoverImageUrl = p.CoverImageUrl,
+                Material = p.Material,
+                Gender = p.Gender,
+                CareInstructions = p.CareInstructions,
+                IsActive = p.IsActive
+            }).ToList();
 
-            // =========================
-            // 14. Mapping
-            // =========================
-
-            var result = productsAfterPagination.Select(p =>
-                new ProductResponseDTO
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Slug = p.Slug,
-                    ShortDescription = p.ShortDescription,
-
-                    BrandName = p.Brand.Name,
-                    CategoryName = p.Category.Name,
-
-                    BasePrice = p.BasePrice,
-                    DiscountPrice = p.DiscountPrice,
-
-                    CoverImageUrl = p.CoverImageUrl,
-                    Material = p.Material,
-                    Gender = p.Gender,
-                    CareInstructions = p.CareInstructions,
-
-                    IsActive = p.IsActive
-                })
-                .ToList();
-
-
-            // =========================
-            // 15. نرجع Paginated Response
-            // =========================
-
-            return new PaginatedResponseDTO<ProductResponseDTO>(
+            var paginatedData = new PaginatedResponseDTO<ProductResponseDTO>(
                 query.PageNumber,
                 query.PageSize,
                 totalRecords,
                 result);
-        }
-        //product details by slug   
-        public async Task<ProductResponseDTO> GetProductBySlug(string slug)
-        {
-          var product = await context.Products.FirstOrDefaultAsync(p => p.Slug == slug);
-            if (product == null)
-                    throw new Exception("Product not found.");
-    
-                return mapper.Map<ProductResponseDTO>(product);
+
+            return new ApiResponse<PaginatedResponseDTO<ProductResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Paginated products retrieved successfully.",
+                Data = paginatedData
+            };
         }
     }
 }

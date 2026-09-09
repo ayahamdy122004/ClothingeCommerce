@@ -12,28 +12,30 @@ namespace E_Commerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
- 
+
     public class AccountController : ControllerBase
     {
-        private readonly IAccountManagerServices  account;
+        #region
+        private readonly IAccountManagerServices account;
         private readonly ICustomerService service;
 
         public AccountController(IAccountManagerServices account, ICustomerService service)
         {
-           this.account = account;
-        this.service = service;
+            this.account = account;
+            this.service = service;
         }
+        #endregion
         [HttpGet("diplayCustomer({Email})")]
         public async Task<IActionResult> GetCustomer(string Email)
-        { 
+        {
             var customer = await service.GetCustomer(Email);
             if (customer == null)
-                return NotFound(new { message = "Customer not found." });
+                return BadRequest(customer);
             return Ok(customer);
 
         }
- 
-        [HttpPut("UpdateProfile")] 
+
+        [HttpPut("UpdateProfile")]
         public async Task<IActionResult> UpdateCustomer([FromQuery] string email, [FromBody] UpdateUserProfileDTO model)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -45,7 +47,7 @@ namespace E_Commerce.Controllers
 
             if (updatedCustomer == null)
             {
-                return NotFound(new { message = "Customer not found or update failed." });
+                return NotFound(model);
             }
 
             return Ok(updatedCustomer);
@@ -55,15 +57,15 @@ namespace E_Commerce.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPassword model)
         {
             var message = await account.ForgotPasswordAsync(model);
-            return Ok(new { message });
+            return Ok(message);
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPassword model)
         {
             var result = await account.ResetPasswordAsync(model);
-            if (!result.IsAuthenticated)
-                return BadRequest(result);
+            if (!result.Success)
+                BadRequest(result);
 
             return Ok(result);
         }
