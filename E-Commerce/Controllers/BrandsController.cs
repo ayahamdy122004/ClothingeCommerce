@@ -1,6 +1,7 @@
 ﻿using E_Commerce.Entities;
-using E_Commerce.Entities.DTO; // <-- ده السطر اللي بيحل إيرور الـ UpdateStatusRequest
+using E_Commerce.Entities.DTO;
 using E_Commerce.Entities.DTO.Models.BRANDS;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Helpers;
 using E_Commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,6 @@ namespace E_Commerce.Controllers
 {
     [Route("api/admin/[controller]")]
     [ApiController]
-
     public class AdminBrandsController : ControllerBase
     {
         private readonly IBrandService _brandService;
@@ -21,42 +21,45 @@ namespace E_Commerce.Controllers
         }
 
         [HttpGet]
-
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<BrandResponseDTO>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
-            var brands = await _brandService.GetAllAsync();
-            return Ok(brands);
+            var result = await _brandService.GetAllAsync();
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpPost]
-        [Authorize(Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<BrandResponseDTO>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = Role.Administrator)] 
         public async Task<IActionResult> Create([FromBody] CreateBrandRequestDTO request)
         {
-            var brand = await _brandService.CreateAsync(request);
-            return Ok(brand);
+            var result = await _brandService.CreateAsync(request);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, result);
+
+            return StatusCode(StatusCodes.Status201Created, result);
         }
 
         [HttpPut("{id}")]
-      
-        [Authorize(Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<BrandResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = Role.Administrator)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateBrandRequestDTO request)
         {
-            var brand = await _brandService.UpdateAsync(id, request);
-            if (brand == null)
-                return NotFound(new { message = "Brand not found." });
-
-            return Ok(brand);
+            var result = await _brandService.UpdateAsync(id, request);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Authorize(Roles = Role.Administrator)]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
             var result = await _brandService.UpdateStatusAsync(id, request.IsActive);
-            if (!result)
-                return NotFound(new { message = "Brand not found." });
-
-            return Ok(new { message = "Brand status updated successfully." });
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

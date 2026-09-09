@@ -1,7 +1,9 @@
 ﻿using E_Commerce.Entities.DTO.Models.Variation;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Helpers;
 using E_Commerce.services.VariationProductServices;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_Commerce.Controllers
@@ -10,83 +12,61 @@ namespace E_Commerce.Controllers
     [ApiController]
     public class VariationProductController : ControllerBase
     {
-        private readonly IVariationProductService variationProductService;
+        private readonly IVariationProductService _variationProductService;
 
-        public VariationProductController(
-            IVariationProductService variationProductService)
+        public VariationProductController(IVariationProductService variationProductService)
         {
-            this.variationProductService = variationProductService;
+            _variationProductService = variationProductService;
         }
 
-        [Authorize(Role.Administrator)]
-        [HttpPost("Create{productId}")]
-        public async Task<IActionResult> Create(
-            int productId,
-            CreateVariationProductDTO variationProduct)
+        // POST: api/variationproduct/product/5
+        [HttpPost("product/{productId:int}")]
+        [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create(int productId, [FromBody] CreateVariationProductDTO variationProduct)
         {
-            try
-            {
-                var result = await variationProductService
-                    .Create(productId, variationProduct);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _variationProductService.Create(productId, variationProduct);
+            return StatusCode(result.StatusCode, result);
         }
 
-        [Authorize(Role.Administrator)]
-        [HttpPut("Update({id})")]
-        public async Task<IActionResult> Update(
-            int id,
-            UpdateVariationProductDTO variationProduct)
+        // PUT: api/variationproduct/5
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateVariationProductDTO variationProduct)
         {
-            try
-            {
-                var result = await variationProductService
-                    .Update(id, variationProduct);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _variationProductService.Update(id, variationProduct);
+            return StatusCode(result.StatusCode, result);
         }
-        [HttpGet("GetAll")]
+
+        // GET: api/variationproduct
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<VariationProductResponseDTO>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
-            var result = await variationProductService.GetAll();
-
-            return Ok(result);
+            var result = await _variationProductService.GetAll();
+            return StatusCode(result.StatusCode, result);
         }
 
-        [HttpGet("GetById{id}")]
+        // GET: api/variationproduct/5
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
-            try
-            {
-                var result = await variationProductService.GetById(id);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var result = await _variationProductService.GetById(id);
+            return StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/variationproduct/check-sku?sku=ABC-123
         [HttpGet("check-sku")]
-        public async Task<IActionResult> CheckSku(
-            string sku,
-            int? excludeId = null)
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> CheckSku([FromQuery] string sku, [FromQuery] int? excludeId = null)
         {
-            var result = await variationProductService
-                .IsSkuExistAsync(sku, excludeId);
-
-            return Ok(result);
+            var result = await _variationProductService.IsSkuExistAsync(sku, excludeId);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

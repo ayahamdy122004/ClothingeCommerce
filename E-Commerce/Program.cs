@@ -1,4 +1,180 @@
-﻿using ClothingStore.Entities;
+﻿//using ClothingStore.Entities;
+//using E_Commerce.Entities;
+//using E_Commerce.Entities.Data;
+//using E_Commerce.Entities.Model;
+//using E_Commerce.Helpers;
+//using E_Commerce.Repositories;
+//using E_Commerce.Repositories.Interfaces;
+//using E_Commerce.Repositorys.CustomerRepo;
+//using E_Commerce.Repositorys.ProductImageRepo;
+//using E_Commerce.Repositorys.ProductRepo;
+//using E_Commerce.Repositorys.VariationRepo;
+//using E_Commerce.services.AccountManager;
+//using E_Commerce.services.AuthenticationServices;
+//using E_Commerce.services.CachServices;
+//using E_Commerce.services.CartServices;
+//using E_Commerce.services.CustomerServices;
+//using E_Commerce.services.ProductServices;
+//using E_Commerce.services.VariationProductServices;
+//using E_Commerce.Services;
+//using E_Commerce.Services.Interfaces;
+//using Microsoft.AspNetCore.Authentication;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Identity;
+//using Microsoft.EntityFrameworkCore;
+//using Microsoft.IdentityModel.Tokens;
+//using Microsoft.OpenApi.Models;
+//using System.Text;
+
+//namespace E_Commerce
+//{
+//    public class Program
+//    {
+//        public static async Task Main(string[] args)
+//        {
+//            var builder = WebApplication.CreateBuilder(args);
+
+//            builder.Services.AddControllers();
+
+//            builder.Services.AddEndpointsApiExplorer();
+//            ///caching
+//            builder.Services.AddMemoryCache();
+//            builder.Services.AddHttpContextAccessor();
+//            builder.Services.AddSwaggerGen(options =>
+//            {
+//                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Clothing E-Commerce API", Version = "v1" });
+
+//                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//                {
+//                    In = ParameterLocation.Header,
+//                    Description = "Please enter a valid token",
+//                    Name = "Authorization",
+//                    Type = SecuritySchemeType.Http,
+//                    BearerFormat = "JWT",
+//                    Scheme = "Bearer"
+//                });
+//                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+//                {
+//                    {
+//                        new OpenApiSecurityScheme
+//                        {
+//                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+//                        },
+//                        new string[] { }
+//                    }
+//                });
+//            });
+
+
+//            // 3. Database Context
+//            builder.Services.AddDbContext<AppDbContext>(options =>
+//                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+//            // 4. ASP.NET Core Identity
+//            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+//            {
+//                // تقدري تضيفي إعدادات الباسورد هنا لو حبيتي (Password Rules)
+//                options.Password.RequiredLength = 8;
+//                options.Password.RequireDigit = true;
+//                options.Password.RequireUppercase = true;
+//            })
+//                .AddEntityFrameworkStores<AppDbContext>()
+//                .AddDefaultTokenProviders();
+
+
+//            // 5. JWT Configuration (أهم سطرين لشغل الـ [Authorize])
+//            builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
+
+//            var jwtSettings = builder.Configuration.GetSection("JWT").Get<JWT>();
+//            var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
+
+//            builder.Services.AddAuthentication(options =>
+//            {
+//                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//            })
+//            .AddJwtBearer(options =>
+//            {
+//                options.RequireHttpsMetadata = false; // في التطوير بس
+//                options.SaveToken = true;
+//                options.TokenValidationParameters = new TokenValidationParameters
+//                {
+//                    ValidateIssuer = true,
+//                    ValidateAudience = true,
+//                    ValidateLifetime = true,
+//                    ValidateIssuerSigningKey = true,
+//                    ValidIssuer = jwtSettings.Issuer,
+//                    ValidAudience = jwtSettings.Audience,
+//                    IssuerSigningKey = new SymmetricSecurityKey(key)
+//                };
+//            });
+
+
+//            // 6. Repositories (Data Access Layer)
+//            builder.Services.AddScoped<IBrandRepository, BrandRepository>();
+//            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+//            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+//            builder.Services.AddScoped<IVariationRepository, VariationRepository>();
+//            builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+//            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+
+//            // 7. Services (Business Logic Layer)
+//            builder.Services.AddScoped<IAuthenticationservice, services.AuthenticationServices.AuthenticationService>();
+//            builder.Services.AddScoped<IAccountManagerServices, AccountManagerServices>();
+//            builder.Services.AddScoped<IBrandService, BrandService>();
+//            builder.Services.AddScoped<ICategoryService, CategoryService>();
+//            builder.Services.AddScoped<IProductService, ProductService>();
+//            builder.Services.AddScoped<IVariationProductService, VariationProductService>();
+//            builder.Services.AddScoped<IProductImageService, ProductImageService>(); 
+//            builder.Services.AddScoped<ICustomerService, CustomerService>();
+//            builder.Services.AddScoped<ICachService, CachService>();
+//            builder.Services.AddScoped<ICartService, CartService>();
+
+
+//            //automapper
+//            // تسجيل AutoMapper باستخدام Assembly الخاص بالـ Profiles بتاعتك
+//            builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+//            // 8. Build Application
+//            var app = builder.Build();
+
+//            // === Seed Roles (لو مش حاططاه في مكان تاني، خليه هنا) ===
+//            using (var scope = app.Services.CreateScope())
+//            {
+//                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+//                string[] roles = { "Customer", "Administrator" };
+//                foreach (var role in roles)
+//                {
+//                    if (!await roleManager.RoleExistsAsync(role))
+//                        await roleManager.CreateAsync(new IdentityRole(role));
+//                }
+//            }
+//            // =================================================
+
+
+//            // 9. Configure the HTTP request pipeline.
+//            if (app.Environment.IsDevelopment())
+//            {
+//                app.UseSwagger();
+//                app.UseSwaggerUI();
+//            }
+
+//            app.UseHttpsRedirection();
+
+//            // الترتيب ده مهم جداً: Authentication قبل Authorization
+//            app.UseAuthentication();
+//            app.UseAuthorization();
+
+//            app.MapControllers();
+
+//            app.Run();
+//        }
+//    }
+//}
+using ClothingStore.Entities;
 using E_Commerce.Entities;
 using E_Commerce.Entities.Data;
 using E_Commerce.Entities.Model;
@@ -6,6 +182,7 @@ using E_Commerce.Helpers;
 using E_Commerce.Repositories;
 using E_Commerce.Repositories.Interfaces;
 using E_Commerce.Repositorys.CustomerRepo;
+using E_Commerce.Repositorys.OrderRepo;
 using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
 using E_Commerce.Repositorys.VariationRepo;
@@ -14,6 +191,8 @@ using E_Commerce.services.AuthenticationServices;
 using E_Commerce.services.CachServices;
 using E_Commerce.services.CartServices;
 using E_Commerce.services.CustomerServices;
+using E_Commerce.services.OrderServices;
+using E_Commerce.services.PaymantServices;
 using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
@@ -36,14 +215,16 @@ namespace E_Commerce
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
-
             builder.Services.AddEndpointsApiExplorer();
-            ///caching
+
+            // Caching & HttpContext
             builder.Services.AddMemoryCache();
             builder.Services.AddHttpContextAccessor();
+
+            // Swagger Setup
             builder.Services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Clothing E-Commerce API", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Clothing E-Commerce API", Version = "v1" });
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -54,6 +235,7 @@ namespace E_Commerce
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
                 });
+
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -66,29 +248,26 @@ namespace E_Commerce
                 });
             });
 
-
             // 3. Database Context
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
             // 4. ASP.NET Core Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
-                // تقدري تضيفي إعدادات الباسورد هنا لو حبيتي (Password Rules)
                 options.Password.RequiredLength = 8;
                 options.Password.RequireDigit = true;
                 options.Password.RequireUppercase = true;
             })
-                .AddEntityFrameworkStores<AppDbContext>()
-                .AddDefaultTokenProviders();
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
 
-
-            // 5. JWT Configuration (أهم سطرين لشغل الـ [Authorize])
+            // 5. JWT Configuration Safe Binding
             builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
-            var jwtSettings = builder.Configuration.GetSection("JWT").Get<JWT>();
-            var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
+            var jwtSection = builder.Configuration.GetSection("JWT");
+            var keyString = jwtSection["Key"] ?? "SUPER_SECRET_FALLBACK_KEY_123456789_SAFETY";
+            var key = Encoding.UTF8.GetBytes(keyString);
 
             builder.Services.AddAuthentication(options =>
             {
@@ -97,7 +276,7 @@ namespace E_Commerce
             })
             .AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = false; // في التطوير بس
+                options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -105,57 +284,67 @@ namespace E_Commerce
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
+                    ValidIssuer = jwtSection["Issuer"],
+                    ValidAudience = jwtSection["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
             });
 
-
-            // 6. Repositories (Data Access Layer)
+            // 6. Repositories
             builder.Services.AddScoped<IBrandRepository, BrandRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IVariationRepository, VariationRepository>();
             builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
             builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
-
-            // 7. Services (Business Logic Layer)
-            builder.Services.AddScoped<IAuthenticationservice, services.AuthenticationServices.AuthenticationService>();
+            // 7. Services
+            builder.Services.AddScoped<IAuthenticationservice, AuthenticationService>();
             builder.Services.AddScoped<IAccountManagerServices, AccountManagerServices>();
             builder.Services.AddScoped<IBrandService, BrandService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IVariationProductService, VariationProductService>();
-            builder.Services.AddScoped<IProductImageService, ProductImageService>(); 
+            builder.Services.AddScoped<IProductImageService, ProductImageService>();
             builder.Services.AddScoped<ICustomerService, CustomerService>();
             builder.Services.AddScoped<ICachService, CachService>();
             builder.Services.AddScoped<ICartService, CartService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+           
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
-
-            //automapper
-            // تسجيل AutoMapper باستخدام Assembly الخاص بالـ Profiles بتاعتك
+            // AutoMapper
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
             // 8. Build Application
             var app = builder.Build();
 
-            // === Seed Roles (لو مش حاططاه في مكان تاني، خليه هنا) ===
+            // === Apply Migrations & Seed Roles Safely ===
             using (var scope = app.Services.CreateScope())
             {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                string[] roles = { "Customer", "Administrator" };
-                foreach (var role in roles)
+                var services = scope.ServiceProvider;
+                try
                 {
-                    if (!await roleManager.RoleExistsAsync(role))
-                        await roleManager.CreateAsync(new IdentityRole(role));
+                    var dbContext = services.GetRequiredService<AppDbContext>();
+                    // تطبيق الـ Migrations تلقائياً لضمان وجود الجداول قبل إضافة الـ Roles
+                    await dbContext.Database.MigrateAsync();
+
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                    string[] roles = { "Customer", "Administrator" };
+                    foreach (var role in roles)
+                    {
+                        if (!await roleManager.RoleExistsAsync(role))
+                            await roleManager.CreateAsync(new IdentityRole(role));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during DB Seeding: {ex.Message}");
                 }
             }
-            // =================================================
 
-
-            // 9. Configure the HTTP request pipeline.
+            // 9. Middleware Pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -164,7 +353,6 @@ namespace E_Commerce
 
             app.UseHttpsRedirection();
 
-            // الترتيب ده مهم جداً: Authentication قبل Authorization
             app.UseAuthentication();
             app.UseAuthorization();
 
