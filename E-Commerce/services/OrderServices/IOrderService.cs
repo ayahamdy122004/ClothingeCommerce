@@ -5,11 +5,11 @@ namespace E_Commerce.services.OrderServices
 {
     public interface IOrderService
     {
-        Task<ApiResponse<OrderResponseDTO>> AddOrder(CheckoutDTO checkoutDto);
-        Task<ApiResponse<OrderResponseDTO>> CancelOrderAsync(int orderId);
-        Task<ApiResponse<OrderResponseDTO>> GetOrderById(int id);
-        Task<ApiResponse<IEnumerable<OrderResponseDTO>>> GetOrders(string userId);
-        Task<ApiResponse<OrderResponseDTO>> UpdateOrderStatusAsync(int orderId, string newStatus);
+        public Task<IEnumerable<OrderResponseDTO>> GetOrders(string userId);
+        public Task<OrderResponseDTO> GetOrderById(int id)
+;
+        public Task<OrderResponseDTO> UpdateOrder(OrderItemResponseDTO order);
+        public Task<OrderItemResponseDTO> AddOrder(CheckoutDTO order);
 
     }
 }

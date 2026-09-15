@@ -1,4 +1,5 @@
 ﻿using E_Commerce.Entities.DTO.Models.Variation;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Entities.Model;
 using E_Commerce.Repositorys.VariationRepo;
 
@@ -6,26 +7,29 @@ namespace E_Commerce.services.VariationProductServices
 {
     public class VariationProductService : IVariationProductService
     {
-        private readonly IVariationRepository variationRepository;
+        private readonly IVariationRepository _variationRepository;
 
-        public VariationProductService(
-            IVariationRepository variationRepository)
+        public VariationProductService(IVariationRepository variationRepository)
         {
-            this.variationRepository = variationRepository;
+            _variationRepository = variationRepository;
         }
-        public async Task<VariationProductResponseDTO> Create(int productId,CreateVariationProductDTO variationProduct)
-        {
-            var isSkuExist = await variationRepository
-                .IsSkuExistAsync(variationProduct.SKU);
 
+        public async Task<ApiResponse<VariationProductResponseDTO>> Create(int productId, CreateVariationProductDTO variationProduct)
+        {
+            var isSkuExist = await _variationRepository.IsSkuExistAsync(variationProduct.SKU);
             if (isSkuExist)
             {
-                throw new Exception("SKU already exists");
+                return new ApiResponse<VariationProductResponseDTO>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "SKU already exists."
+                };
             }
 
             var variation = new ProductVariation
             {
-                ProductId = productId, 
+                ProductId = productId,
                 Color = variationProduct.Color,
                 Size = variationProduct.Size,
                 SKU = variationProduct.SKU,
@@ -34,9 +38,9 @@ namespace E_Commerce.services.VariationProductServices
                 IsActive = variationProduct.IsActive
             };
 
-            var result = await variationRepository.Add(variation);
+            var result = await _variationRepository.Add(variation);
 
-            return new VariationProductResponseDTO
+            var dto = new VariationProductResponseDTO
             {
                 Id = result.Id,
                 ProductId = result.ProductId,
@@ -47,28 +51,38 @@ namespace E_Commerce.services.VariationProductServices
                 PriceAdjustment = result.PriceAdjustment,
                 IsActive = result.IsActive
             };
+
+            return new ApiResponse<VariationProductResponseDTO>
+            {
+                StatusCode = 201,
+                Success = true,
+                Message = "Variation created successfully.",
+                Data = dto
+            };
         }
 
-        // =============================
-        // Update Variation
-        // =============================
-        public async Task<VariationProductResponseDTO> Update(
-            int id,
-            UpdateVariationProductDTO variationProduct)
+        public async Task<ApiResponse<VariationProductResponseDTO>> Update(int id, UpdateVariationProductDTO variationProduct)
         {
-            var variation = await variationRepository.GetById(id);
-
+            var variation = await _variationRepository.GetById(id);
             if (variation == null)
             {
-                throw new Exception("Variation not found");
+                return new ApiResponse<VariationProductResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Variation not found."
+                };
             }
 
-            var isSkuExist = await variationRepository
-                .IsSkuExistAsync(variationProduct.SKU, id);
-
+            var isSkuExist = await _variationRepository.IsSkuExistAsync(variationProduct.SKU, id);
             if (isSkuExist)
             {
-                throw new Exception("SKU already exists");
+                return new ApiResponse<VariationProductResponseDTO>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "SKU already exists for another variation."
+                };
             }
 
             variation.Color = variationProduct.Color;
@@ -78,9 +92,9 @@ namespace E_Commerce.services.VariationProductServices
             variation.PriceAdjustment = variationProduct.PriceAdjustment;
             variation.IsActive = variationProduct.IsActive;
 
-            var result = await variationRepository.Update(variation);
+            var result = await _variationRepository.Update(variation);
 
-            return new VariationProductResponseDTO
+            var dto = new VariationProductResponseDTO
             {
                 Id = result.Id,
                 ProductId = result.ProductId,
@@ -91,17 +105,20 @@ namespace E_Commerce.services.VariationProductServices
                 PriceAdjustment = result.PriceAdjustment,
                 IsActive = result.IsActive
             };
+
+            return new ApiResponse<VariationProductResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Variation updated successfully.",
+                Data = dto
+            };
         }
 
-
-        // =============================
-        // Get All
-        // =============================
-        public async Task<IEnumerable<VariationProductResponseDTO>> GetAll()
+        public async Task<ApiResponse<IEnumerable<VariationProductResponseDTO>>> GetAll()
         {
-            var variations = await variationRepository.GetAll();
-
-            return variations.Select(v => new VariationProductResponseDTO
+            var variations = await _variationRepository.GetAll();
+            var dtos = variations.Select(v => new VariationProductResponseDTO
             {
                 Id = v.Id,
                 ProductId = v.ProductId,
@@ -112,22 +129,30 @@ namespace E_Commerce.services.VariationProductServices
                 PriceAdjustment = v.PriceAdjustment,
                 IsActive = v.IsActive
             });
+
+            return new ApiResponse<IEnumerable<VariationProductResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Variations retrieved successfully.",
+                Data = dtos
+            };
         }
 
-
-        // =============================
-        // Get By Id
-        // =============================
-        public async Task<VariationProductResponseDTO> GetById(int id)
+        public async Task<ApiResponse<VariationProductResponseDTO>> GetById(int id)
         {
-            var variation = await variationRepository.GetById(id);
-
+            var variation = await _variationRepository.GetById(id);
             if (variation == null)
             {
-                throw new Exception("Variation not found");
+                return new ApiResponse<VariationProductResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Variation not found."
+                };
             }
 
-            return new VariationProductResponseDTO
+            var dto = new VariationProductResponseDTO
             {
                 Id = variation.Id,
                 ProductId = variation.ProductId,
@@ -138,18 +163,27 @@ namespace E_Commerce.services.VariationProductServices
                 PriceAdjustment = variation.PriceAdjustment,
                 IsActive = variation.IsActive
             };
+
+            return new ApiResponse<VariationProductResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Variation retrieved successfully.",
+                Data = dto
+            };
         }
 
-
-        // =============================
-        // Check SKU
-        // =============================
-        public async Task<bool> IsSkuExistAsync(
-            string sku,
-            int? excludeId = null)
+        public async Task<ApiResponse<bool>> IsSkuExistAsync(string sku, int? excludeId = null)
         {
-            return await variationRepository
-                .IsSkuExistAsync(sku, excludeId);
+            var exists = await _variationRepository.IsSkuExistAsync(sku, excludeId);
+
+            return new ApiResponse<bool>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = exists ? "SKU exists." : "SKU is available.",
+                Data = exists
+            };
         }
     }
 }

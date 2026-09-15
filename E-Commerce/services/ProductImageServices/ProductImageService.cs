@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using E_Commerce.Entities.DTO.Models.ProductImages;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Entities.Model;
 using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
@@ -22,11 +23,28 @@ namespace E_Commerce.services.ProductServices
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ProductImageUploadItemDTO>> UploadImagesAsync(UploadImageRequestDTO request)
+        public async Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> UploadImagesAsync(UploadImageRequestDTO request)
         {
             var product = await _productRepo.GetByIdAsync(request.ProductId);
             if (product == null)
-                throw new Exception("Product not found.");
+            {
+                return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Product not found."
+                };
+            }
+
+            if (request.Images == null || !request.Images.Any())
+            {
+                return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "No images provided for upload."
+                };
+            }
 
             var uploadedImages = new List<ProductImage>();
 
@@ -64,26 +82,44 @@ namespace E_Commerce.services.ProductServices
 
             await _imageRepo.AddRangeAsync(uploadedImages);
 
-            return _mapper.Map<IEnumerable<ProductImageUploadItemDTO>>(uploadedImages);
+            var mappedResult = _mapper.Map<IEnumerable<ProductImageResponseDTO>>(uploadedImages);
+
+            return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Images uploaded successfully.",
+                Data = mappedResult
+            };
         }
 
-
-
-
-
-
-        // 2. جلب كافة صور منتج معين مرتبة
-        public async Task<IEnumerable<ProductImageUploadItemDTO>> GetImagesByProductIdAsync(int productId)
+        public async Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> GetImagesByProductIdAsync(int productId)
         {
             var images = await _imageRepo.GetByProductIdAsync(productId);
-            return _mapper.Map<IEnumerable<ProductImageUploadItemDTO>>(images);
+            var mappedResult = _mapper.Map<IEnumerable<ProductImageResponseDTO>>(images);
+
+            return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Images retrieved successfully.",
+                Data = mappedResult
+            };
         }
 
-        // 3. حذف صورة من الهارد والداتابيز
-        public async Task<bool> DeleteImageAsync(int imageId)
+        public async Task<ApiResponse<bool>> DeleteImageAsync(int imageId)
         {
             var image = await _imageRepo.GetByIdAsync(imageId);
-            if (image == null) return false;
+            if (image == null)
+            {
+                return new ApiResponse<bool>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Image not found.",
+                    Data = false
+                };
+            }
 
             var relativePath = image.ImageUrl.TrimStart('/');
             var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
@@ -95,7 +131,13 @@ namespace E_Commerce.services.ProductServices
 
             await _imageRepo.DeleteAsync(image);
 
-            return true;
+            return new ApiResponse<bool>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "Image deleted successfully.",
+                Data = true
+            };
         }
     }
 }

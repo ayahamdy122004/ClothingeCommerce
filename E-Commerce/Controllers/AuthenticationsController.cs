@@ -25,9 +25,11 @@ namespace E_Commerce.Controllers
                 return BadRequest(ModelState);
 
             var result = await authService.Register(model);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
 
-            if (!result.IsAuthenticated)
-                return BadRequest(result.Message);
 
             return Ok(result);
         }
@@ -41,8 +43,11 @@ namespace E_Commerce.Controllers
             var result = await authService.Login(model);
 
 
-            if (!result.IsAuthenticated)
-                return BadRequest(result.Message);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
 
             return Ok(result);
         }
@@ -54,9 +59,9 @@ namespace E_Commerce.Controllers
                 return BadRequest(ModelState);
 
             var result = await authService.AddRole(model);
+if(!result.Success)
+                BadRequest(result);
 
-            if (!string.IsNullOrEmpty(result))
-                return BadRequest(result);
 
             return Ok(model);
         }
@@ -66,8 +71,8 @@ namespace E_Commerce.Controllers
             public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmail model)
             {
                 var result = await authService.ConfirmEmailAsync(model);
-                if (!result.IsAuthenticated)
-                    return BadRequest(result);
+               if(!result.Success)
+                return BadRequest(result);  
 
                 return Ok(result);
             }

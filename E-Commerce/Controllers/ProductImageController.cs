@@ -1,7 +1,9 @@
 ﻿using E_Commerce.Entities.DTO.Models.ProductImages;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Helpers;
 using E_Commerce.services.ProductServices;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_Commerce.Controllers
@@ -10,61 +12,43 @@ namespace E_Commerce.Controllers
     [ApiController]
     public class ProductImageController : ControllerBase
     {
-        private readonly IProductImageService productImageService;
+        private readonly IProductImageService _productImageService;
 
         public ProductImageController(IProductImageService productImageService)
         {
-            this.productImageService = productImageService;
+            _productImageService = productImageService;
         }
 
-         [Authorize(Role.Administrator)]
-        [HttpPost("Upload")]
+        // POST: api/productimage/upload
+        [HttpPost("upload")]
+        [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProductImageResponseDTO>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UploadImages([FromForm] UploadImageRequestDTO request)
         {
-            try
-            {
-                var result = await productImageService.UploadImagesAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _productImageService.UploadImagesAsync(request);
+            return StatusCode(result.StatusCode, result);
         }
 
-        [HttpGet("GetImagesByProductId{productId}")]
+        // GET: api/productimage/product/5
+        [HttpGet("product/{productId:int}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProductImageResponseDTO>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetImagesByProductId(int productId)
         {
-            try
-            {
-                var result = await productImageService.GetImagesByProductIdAsync(productId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _productImageService.GetImagesByProductIdAsync(productId);
+            return StatusCode(result.StatusCode, result);
         }
 
-        [Authorize(Role.Administrator)]
-        [HttpDelete("Delete{imageId}")]
+        // DELETE: api/productimage/5
+        [HttpDelete("{imageId:int}")]
+        [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteImage(int imageId)
         {
-            try
-            {
-                var result = await productImageService.DeleteImageAsync(imageId);
-
-                if (!result)
-                {
-                    return NotFound("Image not found");
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _productImageService.DeleteImageAsync(imageId);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }
