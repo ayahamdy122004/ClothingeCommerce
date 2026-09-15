@@ -197,6 +197,8 @@ using E_Commerce.services.ProductServices;
 using E_Commerce.services.VariationProductServices;
 using E_Commerce.Services;
 using E_Commerce.Services.Interfaces;
+using E_Commerce.Services.PaymentServices;
+
 //using E_Commerce.Services.PaymentServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -301,7 +303,7 @@ namespace E_Commerce
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
             // 7. Services
-            builder.Services.AddScoped<IAuthenticationservice, AuthenticationService>();
+            builder.Services.AddScoped<IAuthenticationservice, E_Commerce.services.AuthenticationServices.AuthenticationService>();
             // 7. Services
             builder.Services.AddScoped<IAuthenticationservice,E_Commerce.services.AuthenticationServices.AuthenticationService>();
             builder.Services.AddScoped<IAccountManagerServices, AccountManagerServices>();

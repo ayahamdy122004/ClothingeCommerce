@@ -1,182 +1,94 @@
 ﻿using AutoMapper;
-using Azure;
 using ClothingStore.Entities;
 using E_Commerce.Entities.DTO.Models.ORDER;
 using E_Commerce.Entities.DTO.ResponseAPIs;
+using E_Commerce.Entities.Model;
 using E_Commerce.Repositorys.OrderRepo;
-using E_Commerce.Repositorys.ProductRepo;
-using E_Commerce.Repositorys.VariationRepo;
-using E_Commerce.services.CartServices;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Security.Claims;
 
 namespace E_Commerce.services.OrderServices
 {
     public class OrderService : IOrderService
     {
-        #region Fields
-        private readonly IOrderRepository _repo;
-        private readonly ICartService _cart;
-        private readonly IProductRepository _prod;
-        private readonly IVariationRepository _variationrepo;
+        private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-            IHttpContextAccessor httpContextAccessor, 
+        public OrderService(IOrderRepository orderRepository, IMapper mapper)
+        {
+            _orderRepository = orderRepository;
+            _mapper = mapper;
         }
+        public async Task<ApiResponse<OrderResponseDTO>> AddOrder(CheckoutDTO orderDto)
         {
-            var userId = GetUserId();
-            if (string.IsNullOrEmpty(userId))
+            if (orderDto == null)
             {
-            }
-            {
-                return new ApiResponse<OrderResponseDTO>
-                {
-                    StatusCode = 400,
-                    Success = false,
-                    Message = "User not found or email not confirmed."
-                };
+                return ApiResponse<OrderResponseDTO>.FailureResponse(
+                    "Invalid order data",
+                    StatusCodes.Status400BadRequest);
             }
 
-                if (string.IsNullOrWhiteSpace(checkoutDto.Street) ||
-        string.IsNullOrWhiteSpace(checkoutDto.City) ||
-        string.IsNullOrWhiteSpace(checkoutDto.Country))
-                {
-                }
-                {
-                    {
-                        StatusCode = 400,
-                    };
-                }
-                
-                var orderItems = new List<OrderItem>();
-                {
-                    {
-                        {
-                            StatusCode = 400,
-                        };
-                    }
-                   
-                    if (variation == null)
-                    {
-                    }
+            var orderEntity = _mapper.Map<Order>(orderDto);
+            var createdOrder =  _orderRepository.AddOrderAsync(orderEntity);
 
-                    if (variation.StockQuantity < item.Quantity)
-                    {
-                    }
-
-                    variation.StockQuantity -= item.Quantity;
-
-                    orderItems.Add(new OrderItem
-                    {
-                        ProductId = item.ProductId,
-                        ProductVariationId = item.ProductVariationId,
-                        ProductName = item.ProductName,
-                        SelectedColor = item.SelectedColor,
-                        SelectedSize = item.SelectedSize,
-                        UnitPrice = actualPrice,
-                        Quantity = item.Quantity,
-                        CoverImageUrl = item.CoverImageUrl
-                    });
-                }
-
-                decimal subtotal = orderItems.Sum(x => x.UnitPrice * x.Quantity);
-                decimal finalTotal = subtotal + shippingCost;
-                var newOrder = new Order
-                {
-                    OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 5).ToUpper()}",
-                    CustomerId = userId,
-                    OrderDate = DateTime.UtcNow,
-                    OrderStatus = "Pending",
-                    ShipmentStatus = "NotPrepared",
-                    PaymentMethod = string.IsNullOrEmpty(checkoutDto.PaymentMethod) ? "CashOnDelivery" : checkoutDto.PaymentMethod,
-                    PaymentStatus = "Unpaid",
-
-                    Subtotal = subtotal,
-                    ShippingCost = shippingCost,
-                    FinalTotal = finalTotal,
-
-                    Street = checkoutDto.Street,
-                    City = checkoutDto.City,
-                    Governorate = checkoutDto.State,
-                    Country = checkoutDto.Country,
-                    PostalCode = checkoutDto.ZipCode,
-
-                    OrderItems = orderItems
-                };
-
-
-            {
-                };
-            }
+            var resultDto = _mapper.Map<OrderResponseDTO>(createdOrder);
+            return ApiResponse<OrderResponseDTO>.SuccessResponse(
+                resultDto,
+                "Order created successfully",
+                StatusCodes.Status201Created);
+        }
+        public async Task<ApiResponse<IEnumerable<OrderResponseDTO>>> GetOrders(string userId)
         {
-            var userId = GetUserId();
+            // استدعاء GetOrders بدلاً من GetOrderByIdAsync
+            var orders = await _orderRepository.GetOrders(userId);
+
+            if (orders == null || !orders.Any())
             {
-                {
-                    StatusCode = 404,
-                    Success = false,
-                    Message = "Order not found or you are not authorized to cancel this order."
-                };
-            }
-            {
-                {
-                    StatusCode = 400,
-                };
-            }
-            {
-                {
-                    StatusCode = 400,
-                };
+                return ApiResponse<IEnumerable<OrderResponseDTO>>.FailureResponse(
+                    "No orders found for this user",
+                    StatusCodes.Status404NotFound);
             }
 
-            order.OrderStatus = "Cancelled";
-            order.UpdatedAt = DateTime.UtcNow;
-
-
+            var ordersDto = _mapper.Map<IEnumerable<OrderResponseDTO>>(orders);
+            return ApiResponse<IEnumerable<OrderResponseDTO>>.SuccessResponse(
+                ordersDto,
+                "Orders retrieved successfully",
+                StatusCodes.Status200OK);
+        }
+        public async Task<ApiResponse<OrderResponseDTO>> GetOrderById(int id)
         {
+            var order = await _orderRepository.GetOrderByIdAsync(id);
             if (order == null)
             {
-                {
-                };
+                return ApiResponse<OrderResponseDTO>.FailureResponse(
+                    $"Order with ID {id} not found",
+                    StatusCodes.Status404NotFound);
             }
 
-
+            var orderDto = _mapper.Map<OrderResponseDTO>(order);
+            return ApiResponse<OrderResponseDTO>.SuccessResponse(
+                orderDto,
+                "Order retrieved successfully",
+                StatusCodes.Status200OK);
         }
-        {
-            if (userExists == null)
-            {
-            }
 
-
-            {
-        }
+        public async Task<ApiResponse<OrderResponseDTO>> UpdateOrderStatusAsync(int orderId, string newStatus)
         {
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
             if (order == null)
             {
-                {
-                    StatusCode = 404,
-                    Success = false,
-                    Message = "Order not found."
-                };
+                return ApiResponse<OrderResponseDTO>.FailureResponse(
+                    $"Order with ID {orderId} not found",
+                    StatusCodes.Status404NotFound);
             }
 
             order.OrderStatus = newStatus;
-            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.UpdateOrderAsync(order);
 
+            var orderDto = _mapper.Map<OrderResponseDTO>(order);
+            return ApiResponse<OrderResponseDTO>.SuccessResponse(
+                orderDto,
+                "Order status updated successfully",
+                StatusCodes.Status200OK);
         }
-
-    
-
-        
-
-        private string GetUserId()
-        {
-                ?? string.Empty;
-        }
-
-      
     }
 }
