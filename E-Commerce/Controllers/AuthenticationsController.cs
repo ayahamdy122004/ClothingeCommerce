@@ -1,7 +1,12 @@
 ﻿using E_Commerce.Entities.DTO;
 using E_Commerce.Entities.DTO.Idetity;
+using E_Commerce.Entities.DTO.Models.PRODUCTS;
+using E_Commerce.Entities.DTO.ResponseAPIs;
+using E_Commerce.Entities.Model.authonution;
+using E_Commerce.Helpers;
 using E_Commerce.services.AuthenticationServices;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +24,11 @@ namespace E_Commerce.Controllers
         }
         #region auth(login,register,addrole,generatetokenendpoint)
         [HttpPost("register")]
+      //  [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<AuthModel>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             if (!ModelState.IsValid)
@@ -35,6 +45,9 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPost("Login")]
+        [ProducesResponseType(typeof(ApiResponse<AuthModel>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid)
@@ -45,7 +58,7 @@ namespace E_Commerce.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(result);
+                return NotFound(result);
             }
 
 
@@ -53,6 +66,9 @@ namespace E_Commerce.Controllers
         }
 
         [HttpPost("addrole")]
+        [ProducesResponseType(typeof(ApiResponse<AuthModel>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddRole([FromBody] AddRoleModel model)
         {
             if (!ModelState.IsValid)
@@ -60,7 +76,7 @@ namespace E_Commerce.Controllers
 
             var result = await authService.AddRole(model);
 if(!result.Success)
-                BadRequest(result);
+                NotFound(result);
 
 
             return Ok(model);
@@ -68,7 +84,10 @@ if(!result.Success)
         #endregion
 
         [HttpPost("confirm-email")]
-            public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmail model)
+        [ProducesResponseType(typeof(ApiResponse<AuthModel>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmail model)
             {
                 var result = await authService.ConfirmEmailAsync(model);
                if(!result.Success)

@@ -21,55 +21,77 @@ namespace E_Commerce.Controllers
         }
         [HttpGet]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoryResponseDTO>>), StatusCodes.Status200OK)]
-      //  [Authorize(Roles = Role.Administrator)]
+        [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<CategoryResponseDTO>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAll()
         {
             var result = await _categoryService.GetAllAsync();
-            return Ok(result);
+          if(result == null)
+            {
+                return NotFound(result);
+            }
+            return Ok(result);  
         }
 
         [HttpGet("active")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoryResponseDTO>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAllActiveCategories()
         {
             var result = await _categoryService.GetAllActiveCategoriesAsync();
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            return Ok(result);
         }
 
         [HttpPost]
         [Produces("application/json")]
-      //  [Authorize(Roles = Role.Administrator)]
+       [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<CategoryResponseDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateCategoryRequestDTO request)
         {
             var result = await _categoryService.CreateAsync(request);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            return Ok(result); ;
         }
 
         [HttpPut("{id}")]
         [Produces("application/json")]
-   //     [Authorize(Roles = Role.Administrator)]
+    [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<CategoryResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryRequestDTO request)
         {
             var result = await _categoryService.UpdateAsync(id, request);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            return Ok(result);
         }
 
         [HttpPatch("{id}/status")]
         [Produces("application/json")]
-   //     [Authorize(Roles = Role.Administrator)]
-        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+       [Authorize(Roles = Role.Administrator)]
+        [ProducesResponseType(typeof(ApiResponse<CategoryResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
             var result = await _categoryService.UpdateStatusAsync(id, request.IsActive);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            return Ok(result);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace E_Commerce.Controllers
 
         // POST: api/variationproduct/product/5
         [HttpPost("product/{productId:int}")]
-        //[Authorize(Roles = Role.Administrator)]
+        [Authorize(Roles = Role.Administrator)]
         [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -39,7 +39,7 @@ namespace E_Commerce.Controllers
 
         // PUT: api/variationproduct/5
         [HttpPut("{id:int}")]
-        //[Authorize(Roles = Role.Administrator)]
+        [Authorize(Roles = Role.Administrator)]
         [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
@@ -59,13 +59,13 @@ namespace E_Commerce.Controllers
         // GET: api/variationproduct
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<VariationProductResponseDTO>>), StatusCodes.Status200OK)]
-        [Produces("application/json")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll()
         {
             var result = await _variationProductService.GetAll();
             if (result == null)
             {
-                return NotFound(result);
+                return BadRequest(result);
             }
             else
             {
@@ -95,6 +95,8 @@ namespace E_Commerce.Controllers
         [HttpGet("check-sku")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Authorize(Role.Administrator)] 
         public async Task<IActionResult> CheckSku([FromQuery] string sku, [FromQuery] int? excludeId = null)
         {
             var result = await _variationProductService.IsSkuExistAsync(sku, excludeId);

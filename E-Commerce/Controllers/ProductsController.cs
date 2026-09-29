@@ -69,6 +69,7 @@ namespace E_Commerce.Controllers
         [HttpGet("GetProductDetailsForCustomer/{id}")]
         [ProducesResponseType(typeof(ApiResponse<ProductDetailsResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+      
         [Produces("application/json")]
         public async Task<IActionResult> GetProductDetailsForCustomer(int id)
         {
@@ -83,9 +84,11 @@ namespace E_Commerce.Controllers
             }
         }
         [HttpGet("slug/{slug}")]
+        
         [ProducesResponseType(typeof(ApiResponse<ProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [Produces("application/json")]
+        [Authorize(Roles = Role.Administrator)]
         public async Task<IActionResult> GetProductBySlug(string slug)
         {
             var result = await _service.GetProductBySlug(slug);
@@ -116,7 +119,7 @@ namespace E_Commerce.Controllers
             }
         }
         [HttpPut("{id:int}")]
-      //  [Authorize(Roles = Role.Administrator)]
+       [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<ProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [Produces("application/json")]
@@ -133,7 +136,7 @@ namespace E_Commerce.Controllers
             }
         }
         [HttpPatch("{id:int}/status")]
-     //   [Authorize(Roles = Role.Administrator)]
+    [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [Produces("application/json")]
