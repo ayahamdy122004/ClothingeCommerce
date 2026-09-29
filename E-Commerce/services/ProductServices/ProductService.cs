@@ -6,27 +6,45 @@ using E_Commerce.Entities.DTO.Models.PRODUCTS;
 using E_Commerce.Entities.DTO.Models.PRODUCTS.ProductFilterAndSearch;
 using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Entities.Model;
+using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
+using E_Commerce.Repositorys.VariationRepo;
+using E_Commerce.services.VariationProductServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace E_Commerce.services.ProductServices
 {
     public class ProductService : IProductService
     {
+        #region
         private readonly IProductRepository _repo;
         private readonly IMapper _mapper;
+        private readonly IVariationRepository variationrepo;
+        private readonly IProductImageRepository imagerepo;
         private readonly AppDbContext _context;
-
-        public ProductService(IProductRepository repo, IMapper mapper, AppDbContext context)
+        public ProductService(IProductRepository repo, IMapper mapper, AppDbContext context,
+            IVariationRepository variationrepo,
+IProductImageRepository imagerepo)
         {
             _repo = repo;
             _context = context;
+            this.variationrepo = variationrepo;
+            this.imagerepo = imagerepo;
             _mapper = mapper;
         }
-
+        #endregion
         public async Task<ApiResponse<IEnumerable<ProductResponseDTO>>> GetAll()
         {
             var products = await _repo.GetAllAsync();
+            if(products == null || !products.Any())
+            {
+                return new ApiResponse<IEnumerable<ProductResponseDTO>>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "No products found."
+                };
+            }
             var dtos = _mapper.Map<IEnumerable<ProductResponseDTO>>(products);
 
             return new ApiResponse<IEnumerable<ProductResponseDTO>>
@@ -40,7 +58,8 @@ namespace E_Commerce.services.ProductServices
 
         public async Task<ApiResponse<ProductResponseDTO>> AddProduct(CreateProductRequestDTO request)
         {
-            if (await _repo.IsSlugExistAsync(request.Slug))
+            var w = await _repo.IsSlugExistAsync(request.Slug);
+            if (w!=null)
             {
                 return new ApiResponse<ProductResponseDTO>
                 {
@@ -79,13 +98,10 @@ namespace E_Commerce.services.ProductServices
                     Message = "Product does not exist."
                 };
             }
-
             _mapper.Map(request, product);
             product.UpdatedAt = DateTime.UtcNow;
-
             await _repo.UpdateAsync(product);
             var updatedProduct = await _repo.GetByIdAsync(id);
-
             return new ApiResponse<ProductResponseDTO>
             {
                 StatusCode = 200,
@@ -94,7 +110,6 @@ namespace E_Commerce.services.ProductServices
                 Data = _mapper.Map<ProductResponseDTO>(updatedProduct)
             };
         }
-
         public async Task<ApiResponse<IEnumerable<ProductListResponseDTO>>> GetProductListForCustomerAsync()
         {
             var products = await _repo.GetAllAsync();
@@ -108,7 +123,6 @@ namespace E_Commerce.services.ProductServices
                 Data = dtos
             };
         }
-
         public async Task<ApiResponse<bool>> UpdateStatusAsync(int id, bool isActive)
         {
             var product = await _repo.GetByIdAsync(id);
@@ -136,7 +150,6 @@ namespace E_Commerce.services.ProductServices
                 Data = true
             };
         }
-
         public async Task<ApiResponse<ProductDetailsResponseDTO>> GetProductDetailsByIdAsync(int id)
         {
             var productObj = await _repo.GetByIdAsync(id);
@@ -160,7 +173,7 @@ namespace E_Commerce.services.ProductServices
                     Message = "Product is inactive."
                 };
             }
-
+         //   var variations = await variationrepo.GetById(product.Variations.);
             return new ApiResponse<ProductDetailsResponseDTO>
             {
                 StatusCode = 200,
@@ -169,10 +182,9 @@ namespace E_Commerce.services.ProductServices
                 Data = _mapper.Map<ProductDetailsResponseDTO>(product)
             };
         }
-
         public async Task<ApiResponse<ProductResponseDTO>> GetProductBySlug(string slug)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Slug == slug);
+            var product = await _repo.IsSlugExistAsync(slug);
             if (product == null)
             {
                 return new ApiResponse<ProductResponseDTO>
@@ -182,16 +194,16 @@ namespace E_Commerce.services.ProductServices
                     Message = "Product not found."
                 };
             }
-
+            var dto =_mapper.Map<ProductResponseDTO>(product);  
             return new ApiResponse<ProductResponseDTO>
             {
                 StatusCode = 200,
                 Success = true,
                 Message = "Product retrieved successfully.",
-                Data = _mapper.Map<ProductResponseDTO>(product)
+                Data = dto
             };
-        }
 
+        }
         public async Task<ApiResponse<PaginatedResponseDTO<ProductResponseDTO>>> GetProducts(ProductQueryDTO query)
         {
             var products = await _repo.GetAllAsync();

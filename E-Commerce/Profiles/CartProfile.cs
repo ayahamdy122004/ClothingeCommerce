@@ -1,21 +1,28 @@
 ﻿using AutoMapper;
-using E_Commerce.Entities.Model;
 using E_Commerce.Entities.DTO.Models.CART;
+using E_Commerce.Entities.Model;
 
 namespace E_Commerce.Profiles
 {
-    public class CartProfile : Profile
+    public class CartMappingProfile : Profile
     {
-        public CartProfile()
-        {
-            // التحويل من CartItem (Model) إلى CartItemResponseDTO
-            CreateMap<CartItem, CartItemResponseDTO>();
+        private const decimal ESTIMATED_SHIPPING = 50.00m;
 
-            // التحويل من AddCartDTO إلى CartItem (عند الإضافة للـ Cache)
+        public CartMappingProfile()
+        {
+            // Mapping من Request DTO إلى Entity
             CreateMap<AddCartDTO, CartItem>();
 
-            // التحويل من Cart (Model) إلى CustomerCartResponseDTO
-            CreateMap<Cart, CustomerCartResponseDTO>();
+            // Mapping من Entities إلى Response DTOs
+            CreateMap<CartItem, CartItemResponseDTO>()
+                .ForMember(dest => dest.LineTotal, opt => opt.MapFrom(src => src.UnitPrice * src.Quantity));
+
+            CreateMap<Cart, CustomerCartResponseDTO>()
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+                .ForMember(dest => dest.TotalUnits, opt => opt.MapFrom(src => src.Items.Sum(i => i.Quantity)))
+                .ForMember(dest => dest.SubTotal, opt => opt.MapFrom(src => src.Items.Sum(i => i.UnitPrice * i.Quantity)))
+                .ForMember(dest => dest.EstimatedShipping, opt => opt.MapFrom(src => src.Items.Any() ? ESTIMATED_SHIPPING : 0))
+                .ForMember(dest => dest.EstimatedFinalTotal, opt => opt.MapFrom(src => src.Items.Any() ? (src.Items.Sum(i => i.UnitPrice * i.Quantity) + ESTIMATED_SHIPPING) : 0));
         }
     }
 }

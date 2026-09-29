@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using E_Commerce.Entities.DTO.Models.ProductImages;
+using E_Commerce.Entities.DTO.Models.PRODUCTIMAGEFolder;
 using E_Commerce.Entities.Model;
 
 namespace E_Commerce.services.Profiles
@@ -8,7 +8,7 @@ namespace E_Commerce.services.Profiles
     {
         public ProductImageProfile()
         {
-            CreateMap<ProductImage, ProductImageUploadItemDTO>();
+            CreateMap<ProductImage, ProductImageResponseDTO>();
         }
     }
 }

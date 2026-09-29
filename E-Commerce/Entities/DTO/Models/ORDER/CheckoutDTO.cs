@@ -11,5 +11,9 @@
 
         // أسلوب الشحن أو طريقة الدفع حسب المطلوب من المنتور
         public string PaymentMethod { get; set; } = string.Empty;
+        //  public string CustomerName { get; set; }
+       public string CustomerFirstName {  get; set; } = string.Empty;   
+        public string CustomerLastName { get; set; }
+        public  string? CustomerPhoneNumber { get; set; }
     }
 }

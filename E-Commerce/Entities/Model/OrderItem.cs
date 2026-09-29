@@ -7,15 +7,17 @@ namespace ClothingStore.Entities
     {
         public int Id { get; set; }
 
+        // Foreign Key الصريح لربط الأوردر
         public int OrderId { get; set; }
+
         [ForeignKey(nameof(OrderId))]
         public Order? Order { get; set; }
 
         public int ProductId { get; set; }
 
-        public int? ProductVariationId { get; set; } // Nullable لو منتج مش بيكVariations
+        public int? ProductVariationId { get; set; } // Nullable للمنتجات التي لا تحتوي على Variations
 
-        // ====== Snapshot Data (بيانات تتسجل وقت الطلب وما تتتغيرش) ======
+        // ====== Snapshot Data (بيانات ثابتة تُسجل وقت الطلب) ======
         [MaxLength(200)]
         public string ProductName { get; set; } = string.Empty;
 

@@ -20,70 +20,137 @@ namespace E_Commerce.Controllers
       
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<PaginatedResponseDTO<ProductResponseDTO>>), StatusCodes.Status200OK)]
+        [Produces("application/json")]
         public async Task<IActionResult> GetProducts([FromQuery] ProductQueryDTO query)
         {
             var result = await _service.GetProducts(query);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         
         [HttpGet("all")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProductResponseDTO>>), StatusCodes.Status200OK)]
+        [Produces("application/json")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _service.GetAll();
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         [HttpGet("customer-list")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProductListResponseDTO>>), StatusCodes.Status200OK)]
+        [Produces("application/json")]
         public async Task<IActionResult> GetProductListForCustomer()
         {
             var result = await _service.GetProductListForCustomerAsync();
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
-        [HttpGet("{id:int}")]
+        [HttpGet("GetProductDetailsForCustomer/{id}")]
         [ProducesResponseType(typeof(ApiResponse<ProductDetailsResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+      
+        [Produces("application/json")]
         public async Task<IActionResult> GetProductDetailsForCustomer(int id)
         {
             var result = await _service.GetProductDetailsByIdAsync(id);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
         [HttpGet("slug/{slug}")]
+        
         [ProducesResponseType(typeof(ApiResponse<ProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
+        [Authorize(Roles = Role.Administrator)]
         public async Task<IActionResult> GetProductBySlug(string slug)
         {
             var result = await _service.GetProductBySlug(slug);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
-        [HttpPost]
-        [Authorize(Roles = Role.Administrator)]
+        [HttpPost("AddProduct")]
+       [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<ProductResponseDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [Produces("application/json")]
         public async Task<IActionResult> Add([FromForm] CreateProductRequestDTO pro)
         {
             var result = await _service.AddProduct(pro);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
         [HttpPut("{id:int}")]
-        [Authorize(Roles = Role.Administrator)]
+       [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<ProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
         public async Task<IActionResult> Update(int id, [FromForm] UPdateProductRequestDTO up)
         {
             var result = await _service.UpdateProduct(id, up);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
         [HttpPatch("{id:int}/status")]
-        [Authorize(Roles = Role.Administrator)]
+    [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
             var result = await _service.UpdateStatusAsync(id, request.IsActive);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
     }
 }

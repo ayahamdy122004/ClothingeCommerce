@@ -25,7 +25,8 @@ namespace E_Commerce.Repositorys.ProductRepo
           
             return await db.Products
                 .Include(p => p.Brand)
-                .Include(p => p.Category)
+                .Include(p => p.Category).Include(p => p.Variations) 
+                .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
         public async Task AddAsync(Product pro)
@@ -35,12 +36,15 @@ namespace E_Commerce.Repositorys.ProductRepo
         }
         public async Task UpdateAsync(Product product)
         {
-            db.Products.Update(product);
+            db.Products.
+                Update(product);
             await db.SaveChangesAsync();
         }
-        public async Task<bool> IsSlugExistAsync(string slug, int? excludeId = null)
+        public async Task<Product> IsSlugExistAsync(string slug)
         {
-            return await db.Products.AnyAsync(p => p.Slug == slug && (!excludeId.HasValue || p.Id != excludeId.Value));
+            return await db.Products.Include(p => p.Brand)
+                .Include(p => p.Category).FirstOrDefaultAsync(x => x.Slug == slug);
+              
         }
         public async Task SaveChangesAsync()
         {

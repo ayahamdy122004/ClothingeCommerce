@@ -6,10 +6,11 @@ namespace E_Commerce.Repositorys.OrderRepo
 {
     public interface IOrderRepository
     {
-        Task AddOrderAsync(Order order);
+        Task<Order> AddOrderAsync(Order order);
         Task<IEnumerable<Order>> GetOrders(string userId);
         Task<Order?> GetOrderByIdAsync(int id);
         Task UpdateOrderAsync(Order order);
+        Task<IEnumerable<Order>> GetOrdersByUserEmail(string email);
         Task SaveChanges();
        // Task AddOrderAsync(CheckoutDTO order);
     }

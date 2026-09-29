@@ -22,7 +22,6 @@ namespace E_Commerce.Services
             this.mapper = mapper;
         }
         #endregion
-
         public async Task<ApiResponse<IEnumerable<BrandResponseDTO>>> GetAllAsync()
         {
             var brands = await repo.GetAllAsync();
@@ -49,9 +48,9 @@ namespace E_Commerce.Services
             if (await repo.IsNameExistAsync(request.Name))
                 return new ApiResponse<BrandResponseDTO>
                 { StatusCode =400,
-                   // Data = null,
+                   
                     Message = "Brand name already exists.",
-                  //  Success = false
+       
                   Errors = new { Name = "Brand name already exists." }
                 };
             var brand = new Brand

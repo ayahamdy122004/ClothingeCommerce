@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using E_Commerce.Entities.DTO.CUSTOMER;
+using E_Commerce.Entities.DTO.Models.PRODUCTIMAGEFolder;
+using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Repositorys.CustomerRepo;
 
 namespace E_Commerce.services.CustomerServices
@@ -12,39 +14,71 @@ namespace E_Commerce.services.CustomerServices
             this.mapper = mapper;
             this.cus = cus;
         }
-        public async Task<UserProfileResponseDTO> GetCustomer(string email)
+        public async Task<ApiResponse<UserProfileResponseDTO>> GetCustomer(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+                return new ApiResponse<UserProfileResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Email must not be null"
+                };
             }
 
             var customer = await cus.GetCustomer(email);
 
             if (customer == null)
             {
-                throw new Exception("Customer not found");
+                return new ApiResponse<UserProfileResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "User Not Found"
+                };
             }
-
-          
-            return mapper.Map<UserProfileResponseDTO>(customer);
+            var x = mapper.Map<UserProfileResponseDTO>(customer);
+         return  new ApiResponse<UserProfileResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "User Found",
+                Data = x
+            };
+      
         }
 
-        public async Task<UserProfileResponseDTO> 
-            UpdateCustomer(string email,UpdateUserProfileDTO customer)
+public async Task<ApiResponse<UserProfileResponseDTO>> UpdateCustomer(string email,UpdateUserProfileDTO customer)
         {
            var c=await cus.GetCustomer(email);
             if (c == null)
             {
-                throw new Exception("Customer not found");
+                return new ApiResponse<UserProfileResponseDTO>
+                {
+                    StatusCode = 400,
+                    Success = false,
+                    Message = "user not found"
+                };
             }
             var updatedCustomer = mapper.Map(customer, c);
             var result = await cus.UpdateCustomer(updatedCustomer);
             if (!result)
             {
-                throw new Exception("Failed to update customer");
+                return new ApiResponse<UserProfileResponseDTO>
+                {
+                    StatusCode = 404,
+                    Success = false,
+                    Message = "Failed to update user profile"
+                };
             }
-            return mapper.Map<UserProfileResponseDTO>(updatedCustomer);
+          //  return mapper.Map<ApiResponse<UserProfileResponseDTO>>(updatedCustomer);
+          return new ApiResponse<UserProfileResponseDTO>
+            {
+                StatusCode = 200,
+                Success = true,
+                Message = "User profile updated successfully",
+                Data = mapper.Map<UserProfileResponseDTO>(updatedCustomer)
+            };
         }
     }
 }

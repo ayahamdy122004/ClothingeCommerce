@@ -11,40 +11,66 @@ namespace E_Commerce.Controllers
     [Authorize]
     public class CartController : ControllerBase
     {
-        private readonly ICartService cartService;
+        private readonly ICartService _cartService;
+
         public CartController(ICartService cartService)
         {
-            this.cartService = cartService;
+            _cartService = cartService;
         }
+
         [HttpGet]
-        public IActionResult GetCart()
+        public async Task<IActionResult> GetCart()
         {
-            var cart = cartService.GetCart();
-            return Ok(cart);
+            var result = await _cartService.GetCartAsync();
+            if (result == null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
+
         [HttpPost]
-        public IActionResult AddToCart([FromBody] AddCartDTO item)
+        public async Task<IActionResult> AddToCart([FromBody] AddCartDTO item)
         {
-            cartService.AddToCartAsync(item);
-            return Ok();
+            var result = await _cartService.AddToCartAsync(item);
+            if (result == null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
+
         [HttpPut]
-        public IActionResult UpdateCart([FromBody] UpdateCartDTO item)
+        public async Task<IActionResult> UpdateCart([FromBody] UpdateCartDTO item)
         {
-            cartService.UpdateQuantityAsync(item);
-            return Ok();
-        }   
-        [HttpDelete]
-        public IActionResult RemoveFromCart([FromQuery] int productId)
-        {
-            cartService.RemoveItemAsync(productId);
-            return Ok();
+            var result = await _cartService.UpdateQuantityAsync(item);
+            if (result==null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
-        [HttpDelete("clear")]
-        public IActionResult ClearCart()
+
+        [HttpDelete]
+        public async Task<IActionResult> RemoveFromCart([FromQuery] int productVariationId)
         {
-            cartService.ClearCartAsync();
-            return Ok();
+            var result = await _cartService.RemoveItemAsync(productVariationId);
+            if (result == null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpDelete("clear")]
+        public async Task<IActionResult> ClearCart()
+        {
+            var result = await _cartService.ClearCartAsync();
+            if (result == null)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
     }
 }
