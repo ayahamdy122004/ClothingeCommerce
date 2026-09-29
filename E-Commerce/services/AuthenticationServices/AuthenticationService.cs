@@ -557,5 +557,51 @@ namespace E_Commerce.services.AuthenticationServices
         }
 
         #endregion
+
+
+        public async Task<ApiResponse<AuthModel>> ResetPasswordAsync(ResetPassword model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return ApiResponse<AuthModel>.FailureResponse(
+                    message: "User not found.",
+                    statusCode: 404,
+                    errors: new List<string> { "No account associated with this email address." }
+                );
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                return ApiResponse<AuthModel>.FailureResponse(
+                    message: "Password reset failed.",
+                    statusCode: 400,
+                    errors: result.Errors.Select(e => e.Description).ToList()
+                );
+            }
+
+            // 1. توليد Token جديد للـ JWT
+            var jwtToken = await CreateJwtToken(user); // أو الميثود المسؤولة عن الـ Token عندك
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+            // 2. تجهيز الـ AuthModel كاملاً
+            var authModel = new AuthModel
+            {
+                IsAuthenticated = true,
+                Username = user.UserName,
+                Email = user.Email,
+                Token = tokenString, // إسناد الـ Token المفقود
+ 
+                Roles = (List<string>)await _userManager.GetRolesAsync(user),
+                ExpiresOn = DateTime.UtcNow.AddMinutes(_jwt.DurationInDays)
+            };
+
+            return ApiResponse<AuthModel>.SuccessResponse(
+                data: authModel,
+                message: "Password reset successfully.",
+                statusCode: 200
+            );
+        }
+
     }
 }

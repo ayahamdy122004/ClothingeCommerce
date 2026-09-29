@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
-using E_Commerce.Entities.DTO.Models.ProductImages;
+using E_Commerce.Entities.DTO.Models.PRODUCTIMAGEFolder;
 using E_Commerce.Entities.DTO.ResponseAPIs;
 using E_Commerce.Entities.Model;
 using E_Commerce.Repositorys.ProductImageRepo;
 using E_Commerce.Repositorys.ProductRepo;
+using Microsoft.AspNetCore.Hosting;
 
 namespace E_Commerce.services.ProductServices
 {
@@ -11,133 +12,163 @@ namespace E_Commerce.services.ProductServices
     {
         private readonly IProductImageRepository _imageRepo;
         private readonly IProductRepository _productRepo;
-        private readonly IMapper _mapper;
-
+        private readonly IWebHostEnvironment _environment;
+        private readonly IMapper mapper;
         public ProductImageService(
             IProductImageRepository imageRepo,
             IProductRepository productRepo,
-            IMapper mapper)
+            IWebHostEnvironment environment, IMapper mapper)
         {
             _imageRepo = imageRepo;
             _productRepo = productRepo;
-            _mapper = mapper;
+            _environment = environment;
+            this.mapper = mapper;
         }
 
-        public async Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> UploadImagesAsync(UploadImageRequestDTO request)
+        // 1. Upload Image
+        public async Task<ApiResponse<ProductImageResponseDTO>> UploadImageAsync(UploadImageDTO dto)
         {
-            var product = await _productRepo.GetByIdAsync(request.ProductId);
-            if (product == null)
+            var productExists = await _productRepo.GetByIdAsync(dto.ProductId);
+            if (productExists == null)
             {
-                return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
-                {
-                    StatusCode = 404,
-                    Success = false,
-                    Message = "Product not found."
-                };
+                return ApiResponse<ProductImageResponseDTO>.FailureResponse("Product not found.", 404);
             }
 
-            if (request.Images == null || !request.Images.Any())
+            if (dto.File == null || dto.File.Length == 0)
             {
-                return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
-                {
-                    StatusCode = 400,
-                    Success = false,
-                    Message = "No images provided for upload."
-                };
+                return ApiResponse<ProductImageResponseDTO>.FailureResponse("Please provide a valid image file.", 400);
             }
 
-            var uploadedImages = new List<ProductImage>();
-
-            foreach (var item in request.Images)
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "products");
+            if (!Directory.Exists(uploadsFolder))
             {
-                if (item.File != null && item.File.Length > 0)
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.File.CopyToAsync(fileStream);
+            }
+
+            var imageRelativePath = $"/uploads/products/{uniqueFileName}";
+
+            if (dto.IsCover)
+            {
+                await _imageRepo.ResetCoverImagesAsync(dto.ProductId);
+            }
+
+            var productImage = new ProductImage
+            {
+                ProductId = dto.ProductId,
+                ImageUrl = imageRelativePath,
+                AlternativeText = dto.AlternativeText,
+                IsCover = dto.IsCover,
+                DisplayOrder = 0
+            };
+
+            var savedImage = await _imageRepo.UploadImageAsync(productImage);
+
+            var responseDto = new ProductImageResponseDTO
+            {
+                Id = savedImage.Id,
+                ProductId = savedImage.ProductId,
+                ImageUrl = savedImage.ImageUrl,
+                AlternativeText = savedImage.AlternativeText,
+                IsCover = savedImage.IsCover,
+                DisplayOrder = savedImage.DisplayOrder
+            };
+
+            return ApiResponse<ProductImageResponseDTO>.SuccessResponse(responseDto, "Image uploaded successfully.", 201);
+        }
+
+        // 2. Change Display Order
+        public async Task<ApiResponse<bool>> ChangeDisplayOrderAsync(ChangeOrderDTo dto)
+        {
+            var image = await _imageRepo.GetByIdAsync(dto.ImgId);
+            if (image == null)
+            {
+                return ApiResponse<bool>.FailureResponse("Image not found.", 404);
+            }
+
+            image.DisplayOrder = dto.OrderDisplay;
+            await _imageRepo.UpdateImageAsync(image);
+
+            return ApiResponse<bool>.SuccessResponse(true, "Image display order updated successfully.", 200);
+        }
+
+        // 3. Select Cover Image
+        public async Task<ApiResponse<bool>> SelectCoverImageAsync(SelectCoverDTO dto)
+        {
+            var image = await _imageRepo.GetByIdAsync(dto.ImgId);
+            if (image == null)
+            {
+                return ApiResponse<bool>.FailureResponse("Image not found.", 404);
+            }
+
+            await _imageRepo.ResetCoverImagesAsync(image.ProductId);
+
+            image.IsCover = true;
+            await _imageRepo.UpdateImageAsync(image);
+
+            return ApiResponse<bool>.SuccessResponse(true, "Cover image set successfully.", 200);
+        }
+
+        // 4. Delete Image
+        public async Task<ApiResponse<bool>> DeleteImageAsync(int imgId)
+        {
+            var image = await _imageRepo.GetByIdAsync(imgId);
+            if (image == null)
+            {
+                return ApiResponse<bool>.FailureResponse("Image not found.", 404);
+            }
+
+            if (!string.IsNullOrEmpty(image.ImageUrl))
+            {
+                var physicalPath = Path.Combine(_environment.WebRootPath, image.ImageUrl.TrimStart('/'));
+                if (File.Exists(physicalPath))
                 {
-                    var fileName = $"{Guid.NewGuid()}_{item.File.FileName}";
-                    var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
-
-                    if (!Directory.Exists(folderPath))
-                        Directory.CreateDirectory(folderPath);
-
-                    var filePath = Path.Combine(folderPath, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await item.File.CopyToAsync(stream);
-                    }
-
-                    uploadedImages.Add(new ProductImage
-                    {
-                        ProductId = request.ProductId,
-                        ImageUrl = $"/images/products/{fileName}",
-                        AlternativeText = item.AlternativeText ?? product.Name,
-                        DisplayOrder = item.DisplayOrder,
-                        IsCover = item.IsCover
-                    });
+                    File.Delete(physicalPath);
                 }
             }
 
-            if (uploadedImages.Any(img => img.IsCover))
-            {
-                await _imageRepo.ResetCoverImagesAsync(request.ProductId);
-            }
+            await _imageRepo.DeleteImageAsync(image);
 
-            await _imageRepo.AddRangeAsync(uploadedImages);
-
-            var mappedResult = _mapper.Map<IEnumerable<ProductImageResponseDTO>>(uploadedImages);
-
-            return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
-            {
-                StatusCode = 200,
-                Success = true,
-                Message = "Images uploaded successfully.",
-                Data = mappedResult
-            };
+            return ApiResponse<bool>.SuccessResponse(true, "Image deleted successfully.", 200);
         }
 
+        // 5. Get All Images for Product
         public async Task<ApiResponse<IEnumerable<ProductImageResponseDTO>>> GetImagesByProductIdAsync(int productId)
         {
             var images = await _imageRepo.GetByProductIdAsync(productId);
-            var mappedResult = _mapper.Map<IEnumerable<ProductImageResponseDTO>>(images);
+            if(images == null)
+                return ApiResponse<IEnumerable<ProductImageResponseDTO>>.FailureResponse("No images found for the specified product.", 404);
 
-            return new ApiResponse<IEnumerable<ProductImageResponseDTO>>
+            var responseDtos = images.Select(img => new ProductImageResponseDTO
             {
-                StatusCode = 200,
-                Success = true,
-                Message = "Images retrieved successfully.",
-                Data = mappedResult
-            };
+                Id = img.Id,
+                ProductId = img.ProductId,
+                ImageUrl = img.ImageUrl,
+                AlternativeText = img.AlternativeText,
+                IsCover = img.IsCover,
+                DisplayOrder = img.DisplayOrder
+            });
+
+            return ApiResponse<IEnumerable<ProductImageResponseDTO>>.SuccessResponse(responseDtos, "Images retrieved successfully.", 200);
         }
 
-        public async Task<ApiResponse<bool>> DeleteImageAsync(int imageId)
+        public async Task<ApiResponse<ProductImageResponseDTO>> UpdateImage(int ImgId)
         {
-            var image = await _imageRepo.GetByIdAsync(imageId);
-            if (image == null)
+           var a= await _imageRepo.GetByIdAsync(ImgId);
+            if(a == null)
             {
-                return new ApiResponse<bool>
-                {
-                    StatusCode = 404,
-                    Success = false,
-                    Message = "Image not found.",
-                    Data = false
-                };
+                return ApiResponse<ProductImageResponseDTO>.FailureResponse("Image not found.", 404);
             }
-
-            var relativePath = image.ImageUrl.TrimStart('/');
-            var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
-
-            if (File.Exists(physicalPath))
-            {
-                File.Delete(physicalPath);
-            }
-
-            await _imageRepo.DeleteAsync(image);
-
-            return new ApiResponse<bool>
-            {
-                StatusCode = 200,
-                Success = true,
-                Message = "Image deleted successfully.",
-                Data = true
-            };
+            a.IsCover = true;
+            var x=mapper.Map<ProductImageResponseDTO>(a);
+            return ApiResponse<ProductImageResponseDTO>.SuccessResponse(x, "Image deleted successfully.", 200);
         }
     }
 }

@@ -6,11 +6,13 @@ namespace E_Commerce.Repositorys.VariationRepo
 {
     public class VariationRepository: IVariationRepository  
     {
+        #region
         private readonly AppDbContext db;
         public VariationRepository(AppDbContext db)
         {
             this.db = db;
         }
+        #endregion
         public async Task<ProductVariation> GetById(int id)
         {
             return await db.ProductVariations.FindAsync(id);
@@ -31,10 +33,10 @@ namespace E_Commerce.Repositorys.VariationRepo
             await db.SaveChangesAsync();
             return variation;
         }
-
         public async Task<bool> IsSkuExistAsync(string sku, int? excludeId = null)
         {
-            return await db.ProductVariations.AnyAsync(v => v.SKU == sku && (!excludeId.HasValue || v.Id != excludeId.Value));
+            return await db.ProductVariations.AnyAsync
+                (v => v.SKU == sku && (!excludeId.HasValue || v.Id != excludeId.Value));
         }
     }
 }

@@ -21,52 +21,91 @@ namespace E_Commerce.Controllers
 
         // POST: api/variationproduct/product/5
         [HttpPost("product/{productId:int}")]
-        [Authorize(Roles = Role.Administrator)]
+        //[Authorize(Roles = Role.Administrator)]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(int productId, [FromBody] CreateVariationProductDTO variationProduct)
         {
             var result = await _variationProductService.Create(productId, variationProduct);
-            return StatusCode(result.StatusCode, result);
+            if (result == null) {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         // PUT: api/variationproduct/5
         [HttpPut("{id:int}")]
-        [Authorize(Roles = Role.Administrator)]
+        //[Authorize(Roles = Role.Administrator)]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateVariationProductDTO variationProduct)
         {
             var result = await _variationProductService.Update(id, variationProduct);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         // GET: api/variationproduct
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<VariationProductResponseDTO>>), StatusCodes.Status200OK)]
+        [Produces("application/json")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _variationProductService.GetAll();
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         // GET: api/variationproduct/5
         [HttpGet("{id:int}")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<VariationProductResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _variationProductService.GetById(id);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
 
         // GET: api/variationproduct/check-sku?sku=ABC-123
         [HttpGet("check-sku")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CheckSku([FromQuery] string sku, [FromQuery] int? excludeId = null)
         {
             var result = await _variationProductService.IsSkuExistAsync(sku, excludeId);
-            return StatusCode(result.StatusCode, result);
+            if (result == null)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
     }
 }

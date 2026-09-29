@@ -8,7 +8,7 @@ namespace E_Commerce.Repositorys.ProductRepo
         Task<Product?> GetByIdAsync(int id);
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
-        Task<bool> IsSlugExistAsync(string slug, int? excludeId = null);
+        Task<Product> IsSlugExistAsync(string slug);
         Task SaveChangesAsync();
       //  Task<Product?> GetBySlugAsync(string slug);
     }

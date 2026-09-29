@@ -4,10 +4,11 @@ namespace E_Commerce.Repositorys.ProductImageRepo
 {
     public interface IProductImageRepository
     {
-        Task AddRangeAsync(IEnumerable<ProductImage> images);
+        Task<ProductImage> UploadImageAsync(ProductImage product);
+        Task<ProductImage?> GetByIdAsync(int imgId);
         Task<IEnumerable<ProductImage>> GetByProductIdAsync(int productId);
         Task ResetCoverImagesAsync(int productId);
-        Task<ProductImage?> GetByIdAsync(int id);
-        Task DeleteAsync(ProductImage image);
+        Task UpdateImageAsync(ProductImage image);
+        Task DeleteImageAsync(ProductImage image);
     }
 }

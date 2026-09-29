@@ -9,16 +9,10 @@ namespace E_Commerce.services.Profiles
     {
         public ProductProfile()
         {
-            // 1. من CreateProductRequestDTO إلى Product Entity
+      
             CreateMap<CreateProductRequestDTO, Product>();
-
-            // 2. من UPdateProductRequestDTO إلى Product Entity
             CreateMap<UPdateProductRequestDTO, Product>();
-
-            // 3. من Product Entity إلى ProductResponseDTO (تلقائي 100%)
             CreateMap<Product, ProductResponseDTO>();
-
-            // 4. من Product Entity إلى ProductListResponseDTO (تلقائي مع الحسابات الخاصة)
             CreateMap<Product, ProductListResponseDTO>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
@@ -37,7 +31,24 @@ namespace E_Commerce.services.Profiles
             CreateMap<Product, ProductDetailsResponseDTO>()
           .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Id))
           .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Name))
-          .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => src.CoverImageUrl));
-        }
+          .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => src.CoverImageUrl)).
+          ForMember(dest => dest.BrandName, opt => opt.MapFrom(src => src.Brand != null ? src.Brand.Name : null))
+                // ربط اسم الكاتيجوري
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null));
+   CreateMap<Product, ProductDetailsResponseDTO>()
+                 
+                    .ForMember(dest => dest.CurrentPrice, opt =>
+                        opt.MapFrom(src => src.DiscountPrice ?? src.BasePrice))
+                    .ForMember(dest => dest.AvailableColors, opt =>
+                        opt.MapFrom(src => src.Variations.Select(v => v.Color).Distinct().ToList()))
+                    .ForMember(dest => dest.AvailableSizes, opt =>
+                        opt.MapFrom(src => src.Variations.Select(v => v.Size).Distinct().ToList()))
+                    .ForMember(dest => dest.AdditionalImages, opt =>
+                        opt.MapFrom(src => src.Images.Select(img => img.ImageUrl).ToList()))
+                    .ForMember(dest => dest.InStockStatus, opt =>
+                        opt.MapFrom(src => src.Variations.Any(v => v.StockQuantity > 0) ? "In Stock" : "Out of Stock"));
+            
+        
+    }
     }
 }

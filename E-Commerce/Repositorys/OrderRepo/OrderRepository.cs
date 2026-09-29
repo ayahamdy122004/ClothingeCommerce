@@ -14,13 +14,23 @@ namespace E_Commerce.Repositorys.OrderRepo
             _db = db;
         }
 
-        public async Task AddOrderAsync(Order order)
+        public async Task<Order> AddOrderAsync(Order order)
         {
             await _db.Orders.AddAsync(order);
-            await SaveChanges();
+            await _db.SaveChangesAsync();
+            return order; 
         }
+        
+public async Task<IEnumerable<Order>> GetOrdersByUserEmail(string email)
+        {
+            return await _db.Orders
+                .Include(o => o.OrderItems)
+                .Where(o => o.CustomerEmail== email)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+      
 
-       
         public async Task<Order?> GetOrderByIdAsync(int id)
         {
             return await _db.Orders

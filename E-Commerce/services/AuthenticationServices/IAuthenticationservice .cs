@@ -12,6 +12,7 @@ namespace E_Commerce.services.AuthenticationServices
         public Task<ApiResponse<AuthModel>> Login(LoginModel model);
         public Task<ApiResponse<string>> AddRole(AddRoleModel model);
         Task<ApiResponse<AuthModel>> ConfirmEmailAsync(ConfirmEmail model);
-   
+        Task<ApiResponse<AuthModel>> ResetPasswordAsync(ResetPassword model);
+
     }
 }

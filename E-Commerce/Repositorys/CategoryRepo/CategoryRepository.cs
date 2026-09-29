@@ -47,10 +47,7 @@ namespace E_Commerce.Repositories
             await _context.SaveChangesAsync();
         }
 
-        Task<IEnumerable<Category>> ICategoryRepository.GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
+    
 
     }
 }

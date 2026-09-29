@@ -12,6 +12,6 @@
         public int Quantity { get; set; }
 
         // المنتور طالب إرجاع Line Total لكل عنصر (UnitPrice * Quantity)
-        public decimal LineTotal => UnitPrice * Quantity;
+        public decimal LineTotal { get; set; }
     }
 }

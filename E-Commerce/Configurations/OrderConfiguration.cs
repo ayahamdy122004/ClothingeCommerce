@@ -30,9 +30,10 @@ namespace E_Commerce.Configurations
             builder.Property(o => o.PaymentStatus).IsRequired().HasMaxLength(50);
 
             builder.HasMany(o => o.OrderItems)
-                   .WithOne()
-                   .HasForeignKey(i => i.OrderId)
-                   .OnDelete(DeleteBehavior.Cascade);
+        .WithOne(oi => oi.Order)
+        .HasForeignKey(oi => oi.OrderId)
+        .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

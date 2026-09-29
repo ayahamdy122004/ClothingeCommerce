@@ -18,9 +18,7 @@ namespace E_Commerce.Repositorys.CustomerRepo
         {
            var customer = await user.FindByEmailAsync(email);
             if (customer == null)
-            {
-                throw new Exception("Customer not found");
-            }
+               return null;
             return customer;
         }
 

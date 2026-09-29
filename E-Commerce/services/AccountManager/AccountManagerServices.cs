@@ -1,4 +1,5 @@
-﻿using ClothingStore.Entities;
+﻿using AutoMapper;
+using ClothingStore.Entities;
 using E_Commerce.Entities.DTO;
 using E_Commerce.Entities.DTO.Account;
 using E_Commerce.Entities.DTO.ResponseAPIs;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using NuGet.Common;
+using AutoMapper;
 using System.Drawing.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -18,12 +20,14 @@ namespace E_Commerce.services.AccountManager
         #region
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMapper mapper;
         private readonly JWT _jwt;
         public AccountManagerServices(
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
+            RoleManager<IdentityRole> roleManager, IMapper mapper,
             IOptions<Helpers.JWT> jwt)
         {
+            this.mapper = mapper;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwt = jwt.Value;
@@ -51,49 +55,17 @@ namespace E_Commerce.services.AccountManager
             );
         }
 
-       public async Task<ApiResponse<AuthModel>> ResetPasswordAsync(ResetPassword model)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user==null)
-            {
-                return ApiResponse<AuthModel>.FailureResponse(
-                    message: "Invalid request data.",
-                    statusCode: 400,
-                    errors: new List<string> { "Email, token, and new password are required." }
-                );
-            }
- var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-            if (!result.Succeeded)
-            {
-                return ApiResponse<AuthModel>.FailureResponse(
-                    message: "Password reset failed.",
-                    statusCode: 400,
-                    errors: result.Errors.Select(e => e.Description).ToList()
-                );
-            }
-            var authModel = new AuthModel
-            {
-                IsAuthenticated = true,
-                //Message = "Password reset successfully!"
-            };
-            return ApiResponse<AuthModel>.SuccessResponse(
-                data: authModel,
-                message: "Password reset successfully.",
-                statusCode: 200
-            );
-        }
-
-        public async Task<ApiResponse<Profile>> GetProfileAsync(string userId)
+        public async Task<ApiResponse<E_Commerce.Entities.DTO.Account.Profile>> GetProfileAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return ApiResponse<Profile>.FailureResponse(
+                return ApiResponse<E_Commerce.Entities.DTO.Account.Profile>.FailureResponse(
                     message:"User not found.",
                     statusCode:404,
                     errors: new List<string> { "User with the provided ID does not exist." } );
             }
-            var profile = new Profile
+            var profile = new E_Commerce.Entities.DTO.Account.Profile
             {
                 //  UserId = user.Id,
                 FirstName = user.FirstName,
@@ -101,7 +73,7 @@ namespace E_Commerce.services.AccountManager
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber
             };
-            return ApiResponse<Profile>.SuccessResponse(
+            return ApiResponse<E_Commerce.Entities.DTO.Account.Profile>.SuccessResponse(
                 data: profile,
                 message: "the Process was successful",
                 statusCode: 200
@@ -125,6 +97,8 @@ namespace E_Commerce.services.AccountManager
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.PhoneNumber = model.PhoneNumber;
+       
+
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {

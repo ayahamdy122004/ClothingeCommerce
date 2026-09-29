@@ -1,10 +1,10 @@
-﻿namespace E_Commerce.Entities.DTO.Models.ProductImages
+﻿namespace E_Commerce.Entities.DTO.Models.PRODUCTIMAGEFolder
 {
-    public class ProductImageUploadItemDTO
+    public class UploadImageDTO
     {
+        public int ProductId { get; set; }
         public IFormFile File { get; set; } = null!;
         public string? AlternativeText { get; set; }
-        public int DisplayOrder { get; set; } = 0;
         public bool IsCover { get; set; } = false;
     }
 }
