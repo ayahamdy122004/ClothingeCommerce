@@ -54,6 +54,7 @@ namespace E_Commerce.services.OrderServices
 
         private string GetCacheKey(string key) => $"cart:user:{key}";
         #endregion
+        
         public async Task<ApiResponse<OrderResponseDTO>> AddOrder(CheckoutDTO orderDto)
         {
             if (orderDto == null)
@@ -71,11 +72,11 @@ namespace E_Commerce.services.OrderServices
             string keyByEmail = GetCacheKey(user.Email);
             string keyById = GetCacheKey(user.Id);
 
-            Cart? cart = null;
-            bool isCartFound = _memoryCache.TryGetValue(keyByEmail, out cart) ||
-                               _memoryCache.TryGetValue(keyById, out cart);
+            Cart? cachedCart = null;                                          // اتغير الاسم من cart
+            bool isCartFound = _memoryCache.TryGetValue(keyByEmail, out cachedCart) ||
+                               _memoryCache.TryGetValue(keyById, out cachedCart);
 
-            if (!isCartFound || cart == null || !cart.Items.Any())
+            if (!isCartFound || cachedCart == null || !cachedCart.Items.Any())
             {
                 return ApiResponse<OrderResponseDTO>.FailureResponse("Your cart is empty. Please add items before checking out.", 400);
             }
@@ -84,32 +85,49 @@ namespace E_Commerce.services.OrderServices
             orderEntity.CustomerId = user.Id;
             orderEntity.CustomerFirstName = user.FirstName;
             orderEntity.CustomerLastName = user.LastName;
-            orderEntity.OrderNumber =
-$"ORD-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
-            orderEntity.PaymentMethod = "CashOnDelivery";
-            orderEntity.PaymentStatus = " Unpaidش";
+            orderEntity.OrderNumber = $"ORD-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
             orderEntity.CustomerEmail = user.Email;
+            orderEntity.OrderStatus = "Pending";                              // جديد
+            orderEntity.ShipmentStatus = "NotPrepared";                       // جديد
+            orderEntity.PaymentMethod = "CashOnDelivery";
+            orderEntity.PaymentStatus = "Unpaid";                             // اتصلح (كان فيه مسافة)
 
-            orderEntity.OrderItems = cart.Items.Select(ci => new OrderItem
+            // ====== جديد: Transaction + تحقق + خصم المخزون ======
+            await using var tx = await _orderRepository.BeginTransactionAsync();
+
+            var items = new List<OrderItem>();
+            foreach (var ci in cachedCart.Items)
             {
-                ProductVariationId = ci.ProductVariationId,
+                var v = await _orderRepository.GetVariationWithProductAsync(ci.ProductVariationId);
 
-                Quantity = ci.Quantity,
-                UnitPrice = ci.UnitPrice
-                ,
-                SelectedColor = ci.SelectedColor,
-                SelectedSize = ci.SelectedSize,
-                ProductId = ci.ProductId
-                ,
-                ProductName = ci.ProductName
+                if (v == null || !v.IsActive || !v.Product.IsActive || ci.Quantity <= 0)
+                    return ApiResponse<OrderResponseDTO>.FailureResponse($"'{ci.ProductName}' is no longer available.", 400);
 
-            }).ToList();
-            orderEntity.FinalTotal = cart.Items.Sum(i => i.UnitPrice * i.Quantity);
+                if (!await _orderRepository.TryDecreaseStockAsync(v.Id, ci.Quantity))
+                    return ApiResponse<OrderResponseDTO>.FailureResponse($"Not enough stock for '{v.Product.Name}'.", 400);
+
+                items.Add(new OrderItem
+                {
+                    ProductId = v.ProductId,
+                    ProductVariationId = v.Id,
+                    ProductName = v.Product.Name,
+                    SelectedColor = ci.SelectedColor,
+                    SelectedSize = ci.SelectedSize,
+                    UnitPrice = ci.UnitPrice,                                      // السعر من الداتابيز
+                    Quantity = ci.Quantity
+                });
+            }
+
+            orderEntity.OrderItems = items;
+            orderEntity.FinalTotal = items.Sum(i => i.UnitPrice * i.Quantity);
+
             await _orderRepository.AddOrderAsync(orderEntity);
-            _memoryCache.Remove(keyByEmail);
+            await tx.CommitAsync();                                           // تثبيت كل حاجة
+                                                                              // ====================================================
+
+            _memoryCache.Remove(keyByEmail);                                  // بعد النجاح بس
             _memoryCache.Remove(keyById);
             var resultDto = _mapper.Map<OrderResponseDTO>(orderEntity);
-         //   await cart.ClearCartAsync();
             return ApiResponse<OrderResponseDTO>.SuccessResponse(resultDto, "Order created successfully.", 201);
         }
         public async Task<ApiResponse<OrderResponseDTO>> GetOrderById(int id)
@@ -159,7 +177,6 @@ $"ORD-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
             return ApiResponse<String>.SuccessResponse(d, "Order status retrieved successfully", 200);
 
         }
-
         public async Task<ApiResponse<string>> DisplayShippmentOrder(int orderId)
         {
             var order = await _orderRepository.GetOrderByIdAsync(orderId);
@@ -168,7 +185,6 @@ $"ORD-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
             var x = order.ShipmentStatus;
             return ApiResponse<string>.SuccessResponse(x, "Order retrieved shipment Status Succesifully", 200);
         }
-
         public async Task<ApiResponse<IEnumerable<OrderResponseDTO>>> GetOrdersByUserEmail(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -179,28 +195,71 @@ $"ORD-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
             return ApiResponse<IEnumerable<OrderResponseDTO>>.SuccessResponse(orderDtos, $"All Order For {email} retrieved sucessfully", 200);
 
         }
+ public async Task<ApiResponse<OrderResponseDTO>> CancelOrderAsync(int orderId, bool isAdmin = false)
+{
+    var order = await _orderRepository.GetOrderByIdAsync(orderId);
 
-        public async Task<ApiResponse<OrderResponseDTO>> CancelOrderAsync(int orderId)
+    if (order == null || (!isAdmin && order.CustomerId != GetUserId()))
+        return ApiResponse<OrderResponseDTO>.FailureResponse($"Order with ID {orderId} not found", 404);
+
+    if (order.OrderStatus != "Pending" && order.OrderStatus != "Confirmed")
+        return ApiResponse<OrderResponseDTO>.FailureResponse(
+            $"Order cannot be cancelled while it is {order.OrderStatus}.", 400);
+
+    await using var tx = await _orderRepository.BeginTransactionAsync();
+
+    foreach (var item in order.OrderItems)
+        await _orderRepository.IncreaseStockAsync(item.ProductVariationId, item.Quantity);
+
+    order.OrderStatus = "Cancelled";
+    order.PaymentStatus = "Cancelled";
+    await _orderRepository.SaveChanges();
+    await tx.CommitAsync();
+
+    return ApiResponse<OrderResponseDTO>.SuccessResponse(
+        _mapper.Map<OrderResponseDTO>(order), "Order cancelled successfully", 200);
+}
+
+        public async Task<ApiResponse<OrderResponseDTO>> UpdateFulfillmentAsync(int id, UpdateOrderFulfillmentDTO dto)
         {
-           var x= await _orderRepository.GetOrderByIdAsync(orderId);
-            if(x==null)
+            var shipments = new[] { "NotPrepared", "Preparing", "ReadyForDelivery", "OutForDelivery", "Delivered", "DeliveryFailed", "Returned" };
+            var payments = new[] { "Unpaid", "Paid", "Failed", "Refunded", "Cancelled" };
+
+            if (dto.ShipmentStatus == null && dto.PaymentStatus == null)
+                return ApiResponse<OrderResponseDTO>.FailureResponse("Nothing to update", 400);
+            if (dto.ShipmentStatus != null && !shipments.Contains(dto.ShipmentStatus))
+                return ApiResponse<OrderResponseDTO>.FailureResponse("Invalid shipment status", 400);
+            if (dto.PaymentStatus != null && !payments.Contains(dto.PaymentStatus))
+                return ApiResponse<OrderResponseDTO>.FailureResponse("Invalid payment status", 400);
+
+            var order = await _orderRepository.GetOrderByIdAsync(id);
+            if (order == null)
+                return ApiResponse<OrderResponseDTO>.FailureResponse("Order not found", 404);
+
+            if (order.OrderStatus == "Cancelled" || order.OrderStatus == "Rejected")
+                return ApiResponse<OrderResponseDTO>.FailureResponse(
+                    $"Cannot update an order that is {order.OrderStatus}.", 400);
+
+            if (dto.ShipmentStatus != null)
             {
-                return ApiResponse<OrderResponseDTO>.
-                    FailureResponse($"Order with ID {orderId} not found", 404);
+                if (dto.ShipmentStatus == "Delivered" && order.OrderStatus != "Shipped")
+                    return ApiResponse<OrderResponseDTO>.FailureResponse(
+                        "Order must be Shipped before it can be Delivered.", 400);
+
+                order.ShipmentStatus = dto.ShipmentStatus;
+                if (dto.ShipmentStatus == "Delivered") order.OrderStatus = "Delivered";
             }
-            var orderStatus = x.OrderStatus;
-            if(orderStatus == "Pending" || orderStatus == "Confirmed")
+
+            if (dto.PaymentStatus != null)
             {
-                x.OrderStatus = "Cancelled";
-                await _orderRepository.UpdateOrderAsync(x);
-                var y=_mapper.Map<OrderResponseDTO>(x);
-                return ApiResponse<OrderResponseDTO>.
-                    SuccessResponse(y,$"Order with ID {orderId} is  cancelled Successfully", 200);
+                if (dto.PaymentStatus == "Paid" && order.ShipmentStatus != "Delivered")
+                    return ApiResponse<OrderResponseDTO>.FailureResponse("Payment can be Paid only after delivery", 400);
+                order.PaymentStatus = dto.PaymentStatus;
             }
-            else
-            {                 return ApiResponse<OrderResponseDTO>.
-                    FailureResponse($" For this Order this Operater", 400);
-            }
+
+            await _orderRepository.SaveChanges();
+            return ApiResponse<OrderResponseDTO>.SuccessResponse(
+                _mapper.Map<OrderResponseDTO>(order), "Order updated", 200);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using E_Commerce.Entities.DTO.Models.ORDER;
 using E_Commerce.Entities.DTO.ResponseAPIs;
+using E_Commerce.Helpers;
 using E_Commerce.services.OrderServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -7,12 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-
 namespace E_Commerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-  
     public class OrderController : ControllerBase
     {
         #region
@@ -28,7 +27,6 @@ namespace E_Commerce.Controllers
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         #endregion
-      
         #region
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ApiResponse<OrderResponseDTO>), StatusCodes.Status200OK)]
@@ -63,12 +61,14 @@ namespace E_Commerce.Controllers
 
             return Ok(result);
         }
+
+    
         #region
         [HttpPut("{id:int}/status")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = Role.Administrator)]
         [ProducesResponseType(typeof(ApiResponse<OrderResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-        #endregion
+     
         public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] string newStatus)
         {
             var result = await _orderService.UpdateOrderStatusAsync(id, newStatus);
@@ -136,6 +136,13 @@ namespace E_Commerce.Controllers
             }
             return Ok(result);
         }
-
+        [HttpPut("{id:int}/fulfillment")]
+        [Authorize(Roles=Role.Administrator)]
+        public async Task<IActionResult> UpdateFulfillment(int id, [FromBody] UpdateOrderFulfillmentDTO dto)
+        {
+            var r = await _orderService.UpdateFulfillmentAsync(id, dto);
+            return r.Success ? Ok(r) : StatusCode(r.StatusCode, r);
+        }
+           #endregion
     }
 }
